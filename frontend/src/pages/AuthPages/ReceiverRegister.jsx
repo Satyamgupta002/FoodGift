@@ -12,7 +12,7 @@ function ReceiverRegister() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
+    console.log("🔥 Sign Up clicked");
     try {
       const response = await axios.post(
         "/api/auth/register",

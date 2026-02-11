@@ -2,10 +2,11 @@ import axios from "axios";
 
 const axiosInstance = axios.create({
   
-  baseURL: "https://localhost:8008",
+  baseURL: "http://localhost:8008",
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 //Automatically add token to every request

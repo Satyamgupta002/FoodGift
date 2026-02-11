@@ -43,51 +43,43 @@ export const donorRequest = async (req, res) => {
       location,
       expiryTime,
       imageUrl,
-      latitude,
-      longitude,
+
     } = req.body;
     console.log(req.body);
-    let lat = latitude;
-    let lon = longitude;
-    console.log(lat);
-    
-    if (!lat || !lon) {
-      // FIX: Added custom User-Agent to comply with Nominatim policy and avoid 403 error.
-      // Now using the user's specific email address for compliance.
-      const nominatimHeaders = {
-        'User-Agent': 'HungerBridge-Donation-Service/1.0 (sarvesh221160@gmail.com)' 
-      };
 
-      const geoRes = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`,
-        { headers: nominatimHeaders }
-      );
-      
-      console.log("Nominatim Geocoding Response Status:", geoRes.status);
-      
-      const geoData = geoRes.data; // Already parsed by Axios
-      if (geoData.length > 0) {
-        lat = geoData[0].lat;
-        lon = geoData[0].lon;
-      } else {
-        throw new Error("Could not geocode address to lat/lon");
+
+
+    const geoRes = await axios.get(
+      "https://api.opencagedata.com/geocode/v1/json",
+      {
+        params: {
+          key: process.env.OPENCAGE_API_KEY,
+          q: location,
+          limit: 1,
+        },
       }
+    );
+    console.log(geoRes)
+    if (!geoRes.data.results || geoRes.data.results.length === 0) {
+      throw new Error("Could not geocode address");
     }
 
-    console.log("Coordinates:", { lat, lon });
+    const { lat, lng } = geoRes.data.results[0].geometry;
+
+    console.log("Coordinates:", { lat, lng });
 
     let mlResponse;
     try {
       // Note: Using the internal service name 'http://donationserver-1.onrender.com' is good, 
       // but ensure this is secure and correctly configured for internal requests in Render.
-      const mlServiceUrl = "http://donationserver-1.onrender.com/predict-urgency";
+      const mlServiceUrl = "http://localhost:10000/predict-urgency";
       const requestData = {
         food_type: foodType,
         quantity: approxPeople,
         expiry_time: expiryTime,
         location: {
           lat: parseFloat(lat),
-          lon: parseFloat(lon),
+          lon: parseFloat(lng),
         },
       };
 
@@ -111,8 +103,8 @@ export const donorRequest = async (req, res) => {
         url: mlError.config?.url,
       });
 
-      if (mlError.response?.data && typeof mlError.response.data === 'string' && 
-          mlError.response.data.includes('<html>')) {
+      if (mlError.response?.data && typeof mlError.response.data === 'string' &&
+        mlError.response.data.includes('<html>')) {
         console.error("ML service returned HTML instead of JSON - service might be down or misconfigured");
       }
       return res.status(500).json({
@@ -140,7 +132,7 @@ export const donorRequest = async (req, res) => {
       location: {
         address: location,
         latitude: lat,
-        longitude: lon,
+        longitude: lng,
       },
       expiryTime,
       imageUrl,
@@ -179,7 +171,7 @@ export const donorRequest = async (req, res) => {
 
   } catch (error) {
     console.error("Error creating request:", error);
-    
+
     res.status(500).json({
       message: "Server error",
       error: {

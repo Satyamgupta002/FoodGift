@@ -1,49 +1,56 @@
 import dotenv from "dotenv";
 dotenv.config();
+
 import mongoose from "mongoose";
 import express from "express";
 import cors from "cors";
+import path from "path";
+
 import authRouter from "./routes/authRoutes.js";
 import donorRouter from "./routes/donorRoutes.js";
 import receiverRouter from "./routes/receiverRoutes.js";
-import path from "path";
+
 const app = express();
 const PORT = process.env.PORT || 4000;
-const _dirname = path.resolve();
+const rootDir = path.resolve();
 
-
+/* ---------- MIDDLEWARE ---------- */
 app.use(cors({
   origin: "http://localhost:5173",
   credentials: true
 }));
-// app.use(cors(corsOptions));
+
 app.use(express.json());
 
-
+/* ---------- ROUTES ---------- */
 app.use("/api/auth", authRouter);
 app.use("/api/donor", donorRouter);
 app.use("/api/receiver", receiverRouter);
-app.listen(PORT, () => {
-  console.log(`Serving on port :${PORT}`);
-  connectDb();
+
+/* ---------- FRONTEND (PROD) ---------- */
+app.use(express.static(path.join(rootDir, "frontend", "dist")));
+
+app.get(/^(?!\/api).*/, (_, res) => {
+  res.sendFile(
+    path.join(rootDir, "frontend", "dist", "index.html")
+  );
 });
 
-app.use(express.static(path.join(_dirname, "/frontend/dist")));
-app.get('/', (_,res)=>{
-  res.sendFile(path.resolve(_dirname, "frontend", "dist", "index.html"));
-});
 
-export const connectDb = async () => {
+
+/* ---------- DB ---------- */
+const connectDb = async () => {
   try {
-    const uri = process.env.MONGODB_URI;
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    
-    console.log("✅ MongoDB Connected successfully");
-  } catch (error) {
-    console.error("❌ MongoDB connection error:", error.message);
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("✅ MongoDB Connected");
+  } catch (err) {
+    console.error("❌ MongoDB Error:", err.message);
     process.exit(1);
   }
 };
+
+/* ---------- START SERVER ---------- */
+await connectDb();
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});

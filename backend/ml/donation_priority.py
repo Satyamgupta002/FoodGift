@@ -13,7 +13,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # MongoDB setup
-MONGODB_URL = os.getenv("MONGODB_URL")
+MONGODB_URL = os.getenv("MONGODB_URI")
 if not MONGODB_URL:
     raise ValueError("MONGODB_URL not found in .env")
 

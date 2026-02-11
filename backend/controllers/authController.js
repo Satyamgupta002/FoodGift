@@ -4,23 +4,37 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import axios from "axios";
+
 dotenv.config();
-const JWT_SECRET = process.env.JWT_SECRET;
+
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 
 export const registerUser = async (req, res) => {
   const { name, phoneNumber, email, password, role, location } = req.body;
+
   try {
+    /* ---------- ENV CHECK ---------- */
+    if (!ACCESS_TOKEN_SECRET) {
+      return res.status(500).json({
+        message: "Server misconfiguration: ACCESS_TOKEN_SECRET missing",
+      });
+    }
+
+    /* ---------- DUPLICATE USER CHECK ---------- */
     const existingUser =
       role === "donor"
         ? await Donor.findOne({ email })
         : await Receiver.findOne({ email });
-    if (existingUser)
+
+    if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
-      
+    }
+
+    /* ---------- PASSWORD HASH ---------- */
     const hashedPassword = await bcrypt.hash(password, 10);
     let newUser;
-    let lat,lon;
-    
+
+    /* ---------- DONOR REGISTRATION ---------- */
     if (role === "donor") {
       newUser = await Donor.create({
         name,
@@ -28,37 +42,37 @@ export const registerUser = async (req, res) => {
         email,
         password: hashedPassword,
       });
-    } else {
+    }
+
+    /* ---------- RECEIVER REGISTRATION ---------- */
+    else {
       if (!location) {
         return res
           .status(400)
           .json({ message: "Address is required for receivers" });
       }
-      
-      // --- FIX APPLIED FOR NOMINATIM 403 ERROR ---
-      if (!lat || !lon) {
-        // Added custom User-Agent to comply with Nominatim policy.
-        const nominatimHeaders = {
-          'User-Agent': 'HungerBridge-Registration-Service/1.0 (sarvesh221160@gmail.com)' 
-        };
-        
-        const geoRes = await axios.get(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(location)}`,
-          { headers: nominatimHeaders } // Passing the required header
-        );
-        
-        const geoData = geoRes.data;
-        console.log("Nominatim Response Data:", geoData);
-        
-        if (geoData.length > 0) {
-          lat = geoData[0].lat;
-          lon = geoData[0].lon;
-        } else {
-          throw new Error("Could not geocode address to lat/lon");
-        }
-      }
-      // --- END FIX ---
-      
+
+
+     const geoRes = await axios.get(
+  "https://api.opencagedata.com/geocode/v1/json",
+  {
+    params: {
+      key: process.env.OPENCAGE_API_KEY,
+      q: location,
+      limit: 1,
+    },
+  }
+);
+
+if (!geoRes.data.results || geoRes.data.results.length === 0) {
+  throw new Error("Could not geocode address");
+}
+
+const { lat, lng } = geoRes.data.results[0].geometry;
+
+
+  
+
       newUser = await Receiver.create({
         name,
         phoneNumber,
@@ -66,22 +80,31 @@ export const registerUser = async (req, res) => {
         password: hashedPassword,
         location: {
           address: location,
-          lattitude: lat || "",
-          longitude: lon || "",
+          lattitude: lat.toString(),
+          longitude: lng.toString(),
         },
       });
     }
 
-    const token = jwt.sign({ id: newUser._id, role }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    /* ---------- JWT TOKEN ---------- */
+    const token = jwt.sign(
+      { id: newUser._id, role },
+      ACCESS_TOKEN_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    res.status(201).json({ user: newUser, token });
+    /* ---------- RESPONSE ---------- */
+    res.status(201).json({
+      message: "Registration successful",
+      user: newUser,
+      token,
+    });
   } catch (error) {
     console.error("Registration Error:", error);
-    res
-      .status(500)
-      .json({ message: "Registration failed", error: error.message });
+    res.status(500).json({
+      message: "Registration failed",
+      error: error.message,
+    });
   }
 };
 
@@ -98,7 +121,7 @@ export const loginUser = async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, role }, JWT_SECRET, {
+    const token = jwt.sign({ id: user._id, role }, ACCESS_TOKEN_SECRET, {
       expiresIn: "7d",
     });
     res.status(200).json({ user, token });

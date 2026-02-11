@@ -12,6 +12,7 @@ function DonorRegister() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    console.log("🔥 Sign Up clicked");
     try {
       const response = await axios.post(
         "/api/auth/register",
@@ -138,7 +139,6 @@ function DonorRegister() {
 
           <button
             type="submit"
-            onClick={handleRegister}
             className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
           >
             Sign Up

@@ -48,7 +48,7 @@ export const getAllRequests = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Receiver not found" });
     }
-
+    console.log(receiver.requests)
     res.status(200).json({
       success: true,
       message: "Requests fetched successfully",

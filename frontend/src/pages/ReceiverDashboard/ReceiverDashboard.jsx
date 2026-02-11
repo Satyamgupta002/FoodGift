@@ -209,8 +209,9 @@ const Requests = () => {
           <p className="text-gray-500">No requests available.</p>
         ) : (
           <div className="space-y-4">
-            {requests.map((req, index) => (
-              <div key={req._id || index} className="border-b pb-4">
+            {requests.map((req, index) => {
+              if(req["status"]==='pending') {
+                return (<div key={req._id || index} className="border-b pb-4">
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex gap-4">
                     <img
@@ -253,8 +254,9 @@ const Requests = () => {
                     Accept
                   </button>
                 </div>
-              </div>
-            ))}
+              </div>)
+              }
+})}
           </div>
         )}
       </div>

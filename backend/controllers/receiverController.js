@@ -37,6 +37,7 @@ export const getAllRequests = async (req, res) => {
     // Find receiver and populate their request documents
     const receiver = await Receiver.findById(receiverId).populate({
       path: "requests",
+      match: { status: "pending" },
       populate: {
         path: "donor",
         select: "name",
@@ -97,10 +98,11 @@ export const acceptRequest = async (req, res) => {
         });
     }
 
+    console.log(req.user)
     // 3. Update request status to "picked up"
     const updatedRequest = await Request.findByIdAndUpdate(
       requestId,
-      { status: "picked up" },
+      { status: "picked up",acceptedBy:req.user.id },
       { new: true }
     );
 

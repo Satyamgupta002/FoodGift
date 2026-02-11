@@ -42,7 +42,7 @@ const requestSchema = new mongoose.Schema({
   },
   acceptedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Reciever",
+    ref: "Receiver",
     default: null,
   },
 });

@@ -42,7 +42,7 @@ const Sidebar = ({ isOpen, toggleSidebar, activeTab, setActiveTab }) => {
 
       <div className="pt-16 px-4">
         <h2 className={`text-2xl font-bold mb-8 ${!isOpen && "hidden"}`}>
-          FoodShare
+          FoodGift
         </h2>
         <nav>
           {menuItems.map((item) => {

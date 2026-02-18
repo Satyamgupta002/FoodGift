@@ -40,7 +40,7 @@ function ReceiverLogin() {
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="flex items-center gap-2 mb-8">
           <Gift className="w-8 h-8 text-green-600" />
-          <span className="text-2xl font-bold text-gray-900">ShareCare</span>
+          <span className="text-2xl font-bold text-gray-900">FoodGift</span>
         </div>
 
         {!showForgotPassword ? (

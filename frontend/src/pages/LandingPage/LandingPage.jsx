@@ -214,9 +214,11 @@ function LandingPage() {
             Join our network of NGOs and help us create a world where everyone
             has access to basic necessities.
           </p>
-          <button className="bg-white text-green-600 px-8 py-3 rounded-full font-semibold hover:bg-green-50 transition-colors">
+          <a href="#">
+            <button className="bg-white text-green-600 px-8 py-3 rounded-full font-semibold hover:bg-green-50 transition-colors">
             Get Started Today
-          </button>
+           </button>
+          </a>
         </div>
       </div>
 

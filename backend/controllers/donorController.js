@@ -72,7 +72,7 @@ export const donorRequest = async (req, res) => {
     try {
       // Note: Using the internal service name 'http://donationserver-1.onrender.com' is good, 
       // but ensure this is secure and correctly configured for internal requests in Render.
-      const mlServiceUrl = "http://localhost:10000/predict-urgency";
+      const mlServiceUrl = "http://donationserver-1.onrender.com/predict-urgency";
       const requestData = {
         food_type: foodType,
         quantity: approxPeople,

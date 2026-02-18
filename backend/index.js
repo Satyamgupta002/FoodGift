@@ -11,14 +11,19 @@ import donorRouter from "./routes/donorRoutes.js";
 import receiverRouter from "./routes/receiverRoutes.js";
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-const rootDir = path.resolve();
+const PORT = process.env.PORT || 5000;
+const rootDir = path.resolve("../");
 
 /* ---------- MIDDLEWARE ---------- */
+// app.use(cors({
+//   origin: "http://localhost:5173",
+//   credentials: true
+// }));
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: true,
   credentials: true
 }));
+
 
 app.use(express.json());
 

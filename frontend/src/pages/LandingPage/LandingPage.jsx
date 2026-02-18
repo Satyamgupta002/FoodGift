@@ -226,7 +226,7 @@ function LandingPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Gift className="w-8 h-8" />
-              <span className="text-xl font-bold">FoodShare</span>
+              <span className="text-xl font-bold">FoodGift</span>
             </div>
             <div className="flex gap-6">
               <a href="#" className="hover:text-green-400">

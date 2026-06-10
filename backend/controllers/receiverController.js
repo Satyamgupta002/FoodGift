@@ -45,7 +45,7 @@ export const getAllRequests = async (req, res) => {
       },
       populate: {
         path: "donor",
-        select: "name",
+          select: "name phoneNumber",
       },
     });
 

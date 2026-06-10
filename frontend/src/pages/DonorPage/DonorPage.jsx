@@ -2,12 +2,40 @@ import React, { useState } from "react";
 import axios from "../../config/axiosConfig.js";
 
 const DonorPage = () => {
-  const [formData, setFormData] = useState({
+  const [donationType, setDonationType] = useState("food");
+  
+  const [foodFormData, setFoodFormData] = useState({
     foodType: "Cooked",
     people: "",
     location: "",
     expiry: "",
     image: null,
+  });
+
+  const [clothesFormData, setClothesFormData] = useState({
+    clothesType: "Shirts",
+    size: "M",
+    condition: "New",
+    quantity: "",
+    location: "",
+    expiry: "",
+  });
+
+  const [toysFormData, setToysFormData] = useState({
+    condition: "Good",
+    ageGroup: "3-5",
+    quantity: "",
+    location: "",
+    expiry: "",
+  });
+
+  const [booksFormData, setBooksFormData] = useState({
+    title: "",
+    author: "",
+    quantity: "",
+    condition: "Good",
+    location: "",
+    expiry: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -30,13 +58,47 @@ const DonorPage = () => {
         return;
       }
 
-      const payload = {
-        foodType: formData.foodType,
-        approxPeople: parseInt(formData.people),
-        location: formData.location,
-        expiryTime: formData.expiry,
-        imageUrl: " ", // Simple string for now
-      };
+      let payload;
+      
+      if (donationType === "food") {
+        payload = {
+          donationType: "food",
+          foodType: foodFormData.foodType,
+          approxPeople: parseInt(foodFormData.people),
+          location: foodFormData.location,
+          expiryTime: foodFormData.expiry,
+          imageUrl: " ",
+        };
+      } else if (donationType === "clothes") {
+        payload = {
+          donationType: "clothes",
+          clothesType: clothesFormData.clothesType,
+          size: clothesFormData.size,
+          condition: clothesFormData.condition,
+          quantity: parseInt(clothesFormData.quantity),
+          location: clothesFormData.location,
+          expiryTime: clothesFormData.expiry,
+        };
+      } else if (donationType === "toys") {
+        payload = {
+          donationType: "toys",
+          condition: toysFormData.condition,
+          ageGroup: toysFormData.ageGroup,
+          quantity: parseInt(toysFormData.quantity),
+          location: toysFormData.location,
+          expiryTime: toysFormData.expiry,
+        };
+      } else if (donationType === "books") {
+        payload = {
+          donationType: "books",
+          title: booksFormData.title,
+          author: booksFormData.author,
+          quantity: parseInt(booksFormData.quantity),
+          condition: booksFormData.condition,
+          location: booksFormData.location,
+          expiryTime: booksFormData.expiry,
+        };
+      }
 
       console.log("Submitting:", payload);
 
@@ -54,14 +116,42 @@ const DonorPage = () => {
       setStatusType("success");
       setStatusMessage("Donation submitted successfully! Your donation request has been shared with nearby NGOs.");
       
-      // Reset form
-      setFormData({
-        foodType: "Cooked",
-        people: "",
-        location: "",
-        expiry: "",
-        image: null,
-      });
+      // Reset form based on donation type
+      if (donationType === "food") {
+        setFoodFormData({
+          foodType: "Cooked",
+          people: "",
+          location: "",
+          expiry: "",
+          image: null,
+        });
+      } else if (donationType === "clothes") {
+        setClothesFormData({
+          clothesType: "Shirts",
+          size: "M",
+          condition: "New",
+          quantity: "",
+          location: "",
+          expiry: "",
+        });
+      } else if (donationType === "toys") {
+        setToysFormData({
+          condition: "Good",
+          ageGroup: "3-5",
+          quantity: "",
+          location: "",
+          expiry: "",
+        });
+      } else if (donationType === "books") {
+        setBooksFormData({
+          title: "",
+          author: "",
+          quantity: "",
+          condition: "Good",
+          location: "",
+          expiry: "",
+        });
+      }
       
     } catch (error) {
       console.error("Error:", error);
@@ -77,15 +167,32 @@ const DonorPage = () => {
   };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    if (donationType === "food") {
+      setFoodFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    } else if (donationType === "clothes") {
+      setClothesFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    } else if (donationType === "toys") {
+      setToysFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    } else if (donationType === "books") {
+      setBooksFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-xl p-8">
-      <h2 className="text-3xl font-bold text-green-900 mb-8">Donate Food</h2>
+      <h2 className="text-3xl font-bold text-green-900 mb-8">Make a Donation</h2>
       {statusMessage && (
         <div
           className={`mb-6 rounded-2xl border p-4 shadow-sm ${
@@ -121,47 +228,292 @@ const DonorPage = () => {
           </div>
         </div>
       )}
+
+      {/* Donation Type Selector */}
+      <div className="mb-8">
+        <label className="block text-sm font-semibold text-green-800 mb-3">
+          What would you like to donate?
+        </label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { value: "food", label: "🍲 Food", emoji: "🍲" },
+            { value: "clothes", label: "👕 Clothes", emoji: "👕" },
+            { value: "toys", label: "🧸 Toys", emoji: "🧸" },
+            { value: "books", label: "📚 Books", emoji: "📚" },
+          ].map((type) => (
+            <button
+              key={type.value}
+              type="button"
+              onClick={() => setDonationType(type.value)}
+              className={`py-3 px-4 rounded-lg font-semibold transition-all border-2 ${
+                donationType === type.value
+                  ? "bg-green-600 text-white border-green-600 shadow-lg scale-105"
+                  : "bg-white text-green-800 border-green-300 hover:border-green-600"
+              }`}
+            >
+              {type.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Food Type */}
-        <div>
-          <label className="block text-sm font-semibold text-green-800 mb-2">
-            Food Type
-          </label>
-          <select
-            value={formData.foodType}
-            onChange={(e) => handleChange('foodType', e.target.value)}
-            className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-          >
-            <option value="Cooked">Cooked</option>
-            <option value="Dry">Dry</option>
-            <option value="Fresh">Fresh</option>
-          </select>
-        </div>
+        {/* FOOD DONATION FORM */}
+        {donationType === "food" && (
+          <>
+            <div>
+              <label className="block text-sm font-semibold text-green-800 mb-2">
+                Food Type
+              </label>
+              <select
+                value={foodFormData.foodType}
+                onChange={(e) => handleChange('foodType', e.target.value)}
+                className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              >
+                <option value="Cooked">Cooked</option>
+                <option value="Dry">Dry</option>
+                <option value="Fresh">Fresh</option>
+                <option value="Frozen">Frozen</option>
+              </select>
+            </div>
 
-        {/* Approx People to Serve */}
-        <div>
-          <label className="block text-sm font-semibold text-green-800 mb-2">
-            Approx. People to be Served
-          </label>
-          <input
-            type="number"
-            value={formData.people}
-            onChange={(e) => handleChange('people', e.target.value)}
-            className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-            placeholder="e.g. 50"
-            min="1"
-            required
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-semibold text-green-800 mb-2">
+                Approx. People to be Served
+              </label>
+              <input
+                type="number"
+                value={foodFormData.people}
+                onChange={(e) => handleChange('people', e.target.value)}
+                className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                placeholder="e.g. 50"
+                min="1"
+                required
+              />
+            </div>
 
-        {/* Location */}
+            <div>
+              <label className="block text-sm font-semibold text-green-800 mb-2">
+                Upload Image (Optional)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleChange('image', e.target.files[0])}
+                className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent bg-white"
+              />
+            </div>
+          </>
+        )}
+
+        {/* CLOTHES DONATION FORM */}
+        {donationType === "clothes" && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-green-800 mb-2">
+                  Clothes Type
+                </label>
+                <select
+                  value={clothesFormData.clothesType}
+                  onChange={(e) => handleChange('clothesType', e.target.value)}
+                  className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                >
+                  <option value="Shirts">Shirts</option>
+                  <option value="Pants">Pants</option>
+                  <option value="Dresses">Dresses</option>
+                  <option value="Jackets">Jackets</option>
+                  <option value="Shoes">Shoes</option>
+                  <option value="Mixed">Mixed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-green-800 mb-2">
+                  Size
+                </label>
+                <select
+                  value={clothesFormData.size}
+                  onChange={(e) => handleChange('size', e.target.value)}
+                  className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                >
+                  <option value="XS">Extra Small</option>
+                  <option value="S">Small</option>
+                  <option value="M">Medium</option>
+                  <option value="L">Large</option>
+                  <option value="XL">Extra Large</option>
+                  <option value="Mixed">Mixed Sizes</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-green-800 mb-2">
+                  Condition
+                </label>
+                <select
+                  value={clothesFormData.condition}
+                  onChange={(e) => handleChange('condition', e.target.value)}
+                  className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                >
+                  <option value="New">New</option>
+                  <option value="Like New">Like New</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-green-800 mb-2">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  value={clothesFormData.quantity}
+                  onChange={(e) => handleChange('quantity', e.target.value)}
+                  className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  placeholder="Number of items"
+                  min="1"
+                  required
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* TOYS DONATION FORM */}
+        {donationType === "toys" && (
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-green-800 mb-2">
+                  Condition
+                </label>
+                <select
+                  value={toysFormData.condition}
+                  onChange={(e) => handleChange('condition', e.target.value)}
+                  className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                >
+                  <option value="Like New">Like New</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-green-800 mb-2">
+                  Age Group
+                </label>
+                <select
+                  value={toysFormData.ageGroup}
+                  onChange={(e) => handleChange('ageGroup', e.target.value)}
+                  className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                >
+                  <option value="0-2">0-2 years</option>
+                  <option value="3-5">3-5 years</option>
+                  <option value="6-8">6-8 years</option>
+                  <option value="9-12">9-12 years</option>
+                  <option value="13+">13+ years</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-green-800 mb-2">
+                Quantity
+              </label>
+              <input
+                type="number"
+                value={toysFormData.quantity}
+                onChange={(e) => handleChange('quantity', e.target.value)}
+                className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                placeholder="Number of toys"
+                min="1"
+                required
+              />
+            </div>
+          </>
+        )}
+
+        {/* BOOKS DONATION FORM */}
+        {donationType === "books" && (
+          <>
+            <div>
+              <label className="block text-sm font-semibold text-green-800 mb-2">
+                Book Title
+              </label>
+              <input
+                type="text"
+                value={booksFormData.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                placeholder="Enter book title (or 'Mixed' for multiple)"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-green-800 mb-2">
+                Author
+              </label>
+              <input
+                type="text"
+                value={booksFormData.author}
+                onChange={(e) => handleChange('author', e.target.value)}
+                className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                placeholder="Enter author name (or 'Various' for multiple)"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-green-800 mb-2">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  value={booksFormData.quantity}
+                  onChange={(e) => handleChange('quantity', e.target.value)}
+                  className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                  placeholder="Number of books"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-green-800 mb-2">
+                  Condition
+                </label>
+                <select
+                  value={booksFormData.condition}
+                  onChange={(e) => handleChange('condition', e.target.value)}
+                  className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                >
+                  <option value="Like New">Like New</option>
+                  <option value="Good">Good</option>
+                  <option value="Fair">Fair</option>
+                </select>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Common Fields for All Donations */}
         <div>
           <label className="block text-sm font-semibold text-green-800 mb-2">
-            Location
+            Pickup Location
           </label>
           <input
             type="text"
-            value={formData.location}
+            value={
+              donationType === "food" ? foodFormData.location :
+              donationType === "clothes" ? clothesFormData.location :
+              donationType === "toys" ? toysFormData.location :
+              booksFormData.location
+            }
             onChange={(e) => handleChange('location', e.target.value)}
             className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
             placeholder="Enter pickup address"
@@ -169,30 +521,21 @@ const DonorPage = () => {
           />
         </div>
 
-        {/* Expiry Time */}
         <div>
           <label className="block text-sm font-semibold text-green-800 mb-2">
-            Expiry Time (Approx)
+            Available Until (Approx)
           </label>
           <input
             type="datetime-local"
-            value={formData.expiry}
+            value={
+              donationType === "food" ? foodFormData.expiry :
+              donationType === "clothes" ? clothesFormData.expiry :
+              donationType === "toys" ? toysFormData.expiry :
+              booksFormData.expiry
+            }
             onChange={(e) => handleChange('expiry', e.target.value)}
             className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
             required
-          />
-        </div>
-
-        {/* Image Upload - Disabled for now */}
-        <div>
-          <label className="block text-sm font-semibold text-green-800 mb-2">
-            Upload Image (Optional)
-          </label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => handleChange('image', e.target.files[0])}
-            className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent bg-white"
           />
         </div>
 

@@ -7,7 +7,8 @@ import {
   ClipboardList,
   Trophy,
   Clock,
-  LogOut
+  LogOut,
+  User
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -23,6 +24,7 @@ const Sidebar = ({ isOpen, toggleSidebar, activeTab, setActiveTab, requestCount 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "requests", label: "Requests", icon: ClipboardList },
+    { id: "profile", label: "Profile", icon: User },
     { id: "achievements", label: "Achievements", icon: Trophy },
     { id: "history", label: "Pickups", icon: Clock },
   ];
@@ -204,6 +206,16 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
                       <h4 className="font-semibold text-lg">
                         {req.donor?.name || `Donor ${index + 1}`}
                       </h4>
+                      <p className="text-gray-600">
+                        <span className="font-semibold">Contact: </span>
+                        {req.donor?.phoneNumber ? (
+                          <a href={`tel:${req.donor.phoneNumber}`} className="text-green-600 underline">
+                            {req.donor.phoneNumber}
+                          </a>
+                        ) : (
+                          "N/A"
+                        )}
+                      </p>
                       <div className="space-y-1 mt-1">
                         <p className="text-gray-600">
                           <span className="font-semibold">Food Type: </span>
@@ -398,6 +410,180 @@ const Achievements = () => {
   );
 };
 
+const Profile = () => {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("/api/receiver/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setProfile(response.data.receiver);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (loading) return <p className="text-gray-600">Loading profile...</p>;
+  if (!profile) return <p className="text-gray-600">Profile not found.</p>;
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-2xl font-semibold">Organization Profile</h3>
+        <button
+          onClick={() => setIsEditing(!isEditing)}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+        >
+          {isEditing ? "Cancel" : "Edit Profile"}
+        </button>
+      </div>
+
+      {isEditing ? (
+        <EditProfileForm profile={profile} setProfile={setProfile} setIsEditing={setIsEditing} />
+      ) : (
+        <div className="space-y-4">
+          <div className="border-b pb-4">
+            <p className="text-gray-600 text-sm">Organization Name</p>
+            <p className="text-2xl font-semibold text-gray-900">{profile.organizationName}</p>
+          </div>
+          <div className="border-b pb-4">
+            <p className="text-gray-600 text-sm">Contact Person</p>
+            <p className="text-lg font-medium text-gray-900">{profile.name}</p>
+          </div>
+          <div className="border-b pb-4">
+            <p className="text-gray-600 text-sm">Email</p>
+            <p className="text-lg font-medium text-gray-900">{profile.email}</p>
+          </div>
+          <div className="border-b pb-4">
+            <p className="text-gray-600 text-sm">Phone Number</p>
+            <p className="text-lg font-medium text-gray-900">{profile.phoneNumber}</p>
+          </div>
+          <div className="pb-4">
+            <p className="text-gray-600 text-sm">Address</p>
+            <p className="text-lg font-medium text-gray-900">{profile.location?.address}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const EditProfileForm = ({ profile, setProfile, setIsEditing }) => {
+  const [formData, setFormData] = useState({
+    organizationName: profile.organizationName,
+    name: profile.name,
+    phoneNumber: profile.phoneNumber,
+    address: profile.location?.address,
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.put(
+        "/api/receiver/edit-profile",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setProfile(response.data.receiver);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Organization Name
+        </label>
+        <input
+          type="text"
+          name="organizationName"
+          value={formData.organizationName}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Contact Person Name
+        </label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Phone Number
+        </label>
+        <input
+          type="tel"
+          name="phoneNumber"
+          value={formData.phoneNumber}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Address
+        </label>
+        <input
+          type="text"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+        />
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+      >
+        {saving ? "Saving..." : "Save Changes"}
+      </button>
+    </div>
+  );
+};
+
 const PickupHistory = () => {
   const [pickups, setPickups] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -517,6 +703,8 @@ function ReceiverDashbaord() {
             loading={requestsLoading}
           />
         );
+      case "profile":
+        return <Profile />;
       case "achievements":
         return <Achievements />;
       case "history":

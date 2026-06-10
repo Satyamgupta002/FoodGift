@@ -1,6 +1,10 @@
 import mongoose, { Schema } from "mongoose";
 
 const receiverSchema = new mongoose.Schema({
+  organizationName: {
+    type: String,
+    required: true,
+  },
   name: {
     type: String,
     required: true,

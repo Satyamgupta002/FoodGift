@@ -163,3 +163,59 @@ export const getPickupHistory = async (req, res) => {
     });
   }
 };
+
+export const getReceiverProfile = async (req, res) => {
+  try {
+    const receiverId = req.user.id;
+    const receiver = await Receiver.findById(receiverId).select("-password");
+
+    if (!receiver) {
+      return res.status(404).json({ success: false, message: "Receiver not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Profile fetched successfully",
+      receiver,
+    });
+  } catch (error) {
+    console.error("Error fetching receiver profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch profile",
+      error: error.message,
+    });
+  }
+};
+
+export const editReceiverProfile = async (req, res) => {
+  try {
+    const receiverId = req.user.id;
+    const { organizationName, name, phoneNumber, address } = req.body;
+
+    const receiver = await Receiver.findById(receiverId);
+    if (!receiver) {
+      return res.status(404).json({ success: false, message: "Receiver not found" });
+    }
+
+    if (organizationName) receiver.organizationName = organizationName;
+    if (name) receiver.name = name;
+    if (phoneNumber) receiver.phoneNumber = phoneNumber;
+    if (address) receiver.location.address = address;
+
+    const updatedReceiver = await receiver.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      receiver: updatedReceiver.toObject({ transform: (doc, ret) => { delete ret.password; return ret; } }),
+    });
+  } catch (error) {
+    console.error("Error updating receiver profile:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update profile",
+      error: error.message,
+    });
+  }
+};

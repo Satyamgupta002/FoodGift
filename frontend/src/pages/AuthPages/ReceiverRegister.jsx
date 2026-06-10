@@ -4,6 +4,7 @@ import { Mail, Lock, Phone, User, Crown, MapPin } from "lucide-react";
 import axios from "../../config/axiosConfig.js";
 function ReceiverRegister() {
   const navigate = useNavigate();
+  const [organizationName, setOrganizationName] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -17,6 +18,7 @@ function ReceiverRegister() {
       const response = await axios.post(
         "/api/auth/register",
         {
+          organizationName,
           name,
           phoneNumber: phone,
           email,
@@ -51,12 +53,33 @@ function ReceiverRegister() {
         </div>
         <form onSubmit={handleRegister} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label
+                htmlFor="organizationName"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Organization Name
+              </label>
+              <div className="relative">
+                <User className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+                <input
+                  id="organizationName"
+                  type="text"
+                  value={organizationName}
+                  onChange={(e) => setOrganizationName(e.target.value)}
+                  className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Enter your organization name"
+                  required
+                />
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Full Name
+                Contact Person Name
               </label>
               <div className="relative">
                 <User className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
@@ -66,7 +89,7 @@ function ReceiverRegister() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter your full name"
+                  placeholder="Enter contact person name"
                   required
                 />
               </div>

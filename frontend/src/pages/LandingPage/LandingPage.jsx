@@ -81,6 +81,16 @@ function LandingPage() {
             </div>
             <div className="text-center p-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Bell className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Get Notified</h3>
+              <p className="text-gray-600">
+                Receive instant notifications when donations become available in
+                your area.
+              </p>
+            </div>
+            <div className="text-center p-6">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Clock className="w-8 h-8 text-green-600" />
               </div>
               <h3 className="text-xl font-semibold mb-2">Quick Response</h3>
@@ -131,17 +141,17 @@ function LandingPage() {
         </div>
       </div>
       <div className="text-center my-10">
-  <motion.h2
-    className="text-4xl font-extrabold text-gray-800 mb-6"
-    initial={{ opacity: 0, y: -30 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.8, ease: "easeOut" }}
-  >
-    Our Work For People
-  </motion.h2>
+        <motion.h2
+          className="text-4xl font-extrabold text-gray-800 mb-6"
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          Our Work For People
+        </motion.h2>
 
-  <ReceiverDonorSlider />
-</div>
+        <ReceiverDonorSlider />
+      </div>
       {/* Features Section */}
       <div className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -216,8 +226,8 @@ function LandingPage() {
           </p>
           <a href="#">
             <button className="bg-white text-green-600 px-8 py-3 rounded-full font-semibold hover:bg-green-50 transition-colors">
-            Get Started Today
-           </button>
+              Get Started Today
+            </button>
           </a>
         </div>
       </div>

@@ -6,15 +6,39 @@ const requestSchema = new mongoose.Schema({
     ref: "Donor",
     required: true,
   },
+  donationType: {
+    type: String,
+    enum: ["food", "clothes", "toys", "books"],
+    default: "food",
+    required: true,
+  },
+  // Food donation fields
   foodType: {
     type: String,
     enum: ["Cooked", "Dry", "Fresh"],
-    required: true,
   },
   approxPeople: {
     type: Number,
-    required: true,
   },
+  imageUrl: {
+    type: String,
+    default: "",
+  },
+
+  // Clothes donation fields
+  clothesType: String,
+  size: String,
+  condition: String,
+  quantity: Number,
+
+  // Toys donation fields
+  ageGroup: String,
+
+  // Books donation fields
+  title: String,
+  author: String,
+
+  // Common fields
   location: {
     address: {
       type: String,
@@ -26,10 +50,6 @@ const requestSchema = new mongoose.Schema({
   expiryTime: {
     type: Date,
     required: true,
-  },
-  imageUrl: {
-    type: String,
-    default: "",
   },
   status: {
     type: String,

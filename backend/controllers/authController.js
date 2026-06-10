@@ -10,7 +10,7 @@ dotenv.config();
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 
 export const registerUser = async (req, res) => {
-  const { name, phoneNumber, email, password, role, location } = req.body;
+  const { name, phoneNumber, email, password, role, location, organizationName } = req.body;
 
   try {
     /* ---------- ENV CHECK ---------- */
@@ -51,6 +51,11 @@ export const registerUser = async (req, res) => {
           .status(400)
           .json({ message: "Address is required for receivers" });
       }
+      if (!organizationName) {
+        return res
+          .status(400)
+          .json({ message: "Organization name is required for receivers" });
+      }
 
 
      const geoRes = await axios.get(
@@ -74,6 +79,7 @@ const { lat, lng } = geoRes.data.results[0].geometry;
   
 
       newUser = await Receiver.create({
+        organizationName,
         name,
         phoneNumber,
         email,

@@ -41,11 +41,19 @@ export const editDonorProfile = async (req, res) => {
 };
 
 export const donorRequest = async (req, res) => {
-  console.log("error cp3");
+  console.log("Donation request received");
   try {
     const {
+      donationType,
       foodType,
       approxPeople,
+      clothesType,
+      size,
+      condition,
+      quantity,
+      ageGroup,
+      title,
+      author,
       location,
       expiryTime,
       imageUrl,
@@ -96,66 +104,91 @@ export const donorRequest = async (req, res) => {
 
     let matched_ngos = [];
     let mlUnavailable = false;
-    try {
-      const mlServiceUrl = process.env.ML_SERVICE_URL || "https://foodgift-ml.onrender.com/predict-urgency";
-      const requestData = {
-        food_type: foodType,
-        quantity: approxPeople,
-        expiry_time: expiryTime,
-        location: {
-          lat: parseFloat(lat),
-          lon: parseFloat(lng),
-        },
-      };
+    
+    // Only call ML service for food donations
+    if (donationType === "food") {
+      try {
+        const mlServiceUrl = process.env.ML_SERVICE_URL || "https://foodgift-ml.onrender.com/predict-urgency";
+        const requestData = {
+          food_type: foodType,
+          quantity: approxPeople,
+          expiry_time: expiryTime,
+          location: {
+            lat: parseFloat(lat),
+            lon: parseFloat(lng),
+          },
+        };
 
-      console.log("Sending to ML service:", requestData);
+        console.log("Sending to ML service:", requestData);
 
-      const mlResponse = await axios.post(mlServiceUrl, requestData, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        timeout: 30000,
-      });
-      console.log("ML service response status:", mlResponse.status);
-      console.log("ML service response data:", mlResponse.data);
+        const mlResponse = await axios.post(mlServiceUrl, requestData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          timeout: 30000,
+        });
+        console.log("ML service response status:", mlResponse.status);
+        console.log("ML service response data:", mlResponse.data);
 
-      if (mlResponse.data && Array.isArray(mlResponse.data.matched_ngos)) {
-        matched_ngos = mlResponse.data.matched_ngos;
-      } else {
-        console.warn("ML service returned unexpected response. Using local fallback.", mlResponse.data);
+        if (mlResponse.data && Array.isArray(mlResponse.data.matched_ngos)) {
+          matched_ngos = mlResponse.data.matched_ngos;
+        } else {
+          console.warn("ML service returned unexpected response. Using local fallback.", mlResponse.data);
+        }
+      } catch (mlError) {
+        mlUnavailable = true;
+        console.error("ML Service Error Details:", {
+          message: mlError.message,
+          status: mlError.response?.status,
+          statusText: mlError.response?.statusText,
+          data: mlError.response?.data,
+          url: mlError.config?.url,
+        });
+
+        if (mlError.response?.data && typeof mlError.response.data === 'string' &&
+          mlError.response.data.includes('<html>')) {
+          console.error("ML service returned HTML instead of JSON - service might be down or misconfigured");
+        }
+        console.warn("Continuing with donation submission using local receiver matching fallback.");
       }
-    } catch (mlError) {
-      mlUnavailable = true;
-      console.error("ML Service Error Details:", {
-        message: mlError.message,
-        status: mlError.response?.status,
-        statusText: mlError.response?.statusText,
-        data: mlError.response?.data,
-        url: mlError.config?.url,
-      });
-
-      if (mlError.response?.data && typeof mlError.response.data === 'string' &&
-        mlError.response.data.includes('<html>')) {
-        console.error("ML service returned HTML instead of JSON - service might be down or misconfigured");
-      }
-      console.warn("Continuing with donation submission using local receiver matching fallback.");
     }
 
-    const newRequest = new Request({
+    // Create donation request with flexible fields based on type
+    const requestPayload = {
       donor: req.user.id,
-      foodType,
-      approxPeople,
+      donationType: donationType || "food",
       location: {
         address: location,
         latitude: lat,
         longitude: lng,
       },
       expiryTime,
-      imageUrl,
       status: "pending",
-    });
+    };
 
+    // Add type-specific fields
+    if (donationType === "food") {
+      requestPayload.foodType = foodType;
+      requestPayload.approxPeople = approxPeople;
+      requestPayload.imageUrl = imageUrl || " ";
+    } else if (donationType === "clothes") {
+      requestPayload.clothesType = clothesType;
+      requestPayload.size = size;
+      requestPayload.condition = condition;
+      requestPayload.quantity = quantity;
+    } else if (donationType === "toys") {
+      requestPayload.condition = condition;
+      requestPayload.ageGroup = ageGroup;
+      requestPayload.quantity = quantity;
+    } else if (donationType === "books") {
+      requestPayload.title = title;
+      requestPayload.author = author;
+      requestPayload.quantity = quantity;
+      requestPayload.condition = condition;
+    }
+
+    const newRequest = new Request(requestPayload);
     await newRequest.save();
 
     const distanceKm = (lat1, lon1, lat2, lon2) => {

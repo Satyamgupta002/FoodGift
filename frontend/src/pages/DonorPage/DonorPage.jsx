@@ -11,16 +11,22 @@ const DonorPage = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [statusType, setStatusType] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setStatusMessage("");
+    setStatusType("");
 
     try {
       const token = localStorage.getItem("token");
       
       if (!token) {
-        alert("Please login first");
+        setStatusType("error");
+        setStatusMessage("Please login first before submitting a donation.");
+        setLoading(false);
         return;
       }
 
@@ -45,7 +51,8 @@ const DonorPage = () => {
       );
 
       console.log("Success:", res.data);
-      alert("Donation request created successfully!");
+      setStatusType("success");
+      setStatusMessage("Donation submitted successfully! Your donation request has been shared with nearby NGOs.");
       
       // Reset form
       setFormData({
@@ -58,11 +65,11 @@ const DonorPage = () => {
       
     } catch (error) {
       console.error("Error:", error);
-      
+      setStatusType("error");
       if (error.response?.data?.message) {
-        alert(`Error: ${error.response.data.message}`);
+        setStatusMessage(error.response.data.message);
       } else {
-        alert("Failed to submit donation. Please try again.");
+        setStatusMessage("Failed to submit donation. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -79,6 +86,41 @@ const DonorPage = () => {
   return (
     <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-xl p-8">
       <h2 className="text-3xl font-bold text-green-900 mb-8">Donate Food</h2>
+      {statusMessage && (
+        <div
+          className={`mb-6 rounded-2xl border p-4 shadow-sm ${
+            statusType === "success"
+              ? "border-green-200 bg-green-50"
+              : "border-red-200 bg-red-50"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-full text-white ${
+                statusType === "success"
+                  ? "bg-green-600 animate-pulse"
+                  : "bg-red-600"
+              }`}
+            >
+              {statusType === "success" ? "✓" : "!"}
+            </div>
+            <div>
+              <p
+                className={`font-semibold ${
+                  statusType === "success"
+                    ? "text-green-900"
+                    : "text-red-900"
+                }`}
+              >
+                {statusType === "success"
+                  ? "Donation Submit Successful"
+                  : "Submission Error"}
+              </p>
+              <p className="text-sm text-gray-700">{statusMessage}</p>
+            </div>
+          </div>
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Food Type */}
         <div>

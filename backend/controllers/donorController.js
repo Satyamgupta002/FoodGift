@@ -4,7 +4,13 @@ import bcrypt from "bcryptjs";
 import axios from "axios";
 import Receiver from "../models/receiverModel.js";
 import dotenv from "dotenv";
-dotenv.config();
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 export const editDonorProfile = async (req, res) => {
   try {
@@ -43,25 +49,45 @@ export const donorRequest = async (req, res) => {
       location,
       expiryTime,
       imageUrl,
-
     } = req.body;
     console.log(req.body);
 
+    const OPENCAGE_API_KEY = process.env.OPENCAGE_API_KEY;
+    if (!OPENCAGE_API_KEY) {
+      console.error("Missing OPENCAGE_API_KEY environment variable");
+      return res.status(500).json({
+        message: "Server misconfiguration: OPENCAGE_API_KEY missing",
+      });
+    }
 
+    let geoRes;
+    try {
+      geoRes = await axios.get(
+        "https://api.opencagedata.com/geocode/v1/json",
+        {
+          params: {
+            key: OPENCAGE_API_KEY,
+            q: location,
+            limit: 1,
+          },
+        }
+      );
+    } catch (geoError) {
+      console.error("Geocoding error:", {
+        message: geoError.message,
+        status: geoError.response?.status,
+        data: geoError.response?.data,
+      });
+      return res.status(500).json({
+        message: "Geocode service unavailable",
+        error: geoError.response?.data || geoError.message,
+      });
+    }
 
-    const geoRes = await axios.get(
-      "https://api.opencagedata.com/geocode/v1/json",
-      {
-        params: {
-          key: process.env.OPENCAGE_API_KEY,
-          q: location,
-          limit: 1,
-        },
-      }
-    );
-    console.log(geoRes)
+    console.log(geoRes);
     if (!geoRes.data.results || geoRes.data.results.length === 0) {
-      throw new Error("Could not geocode address");
+      console.error("Geocoding returned no results for location:", location);
+      return res.status(400).json({ message: "Could not geocode address" });
     }
 
     const { lat, lng } = geoRes.data.results[0].geometry;
@@ -122,9 +148,10 @@ export const donorRequest = async (req, res) => {
       console.error("Invalid ML response format:", mlResponse.data);
       return res.status(500).json({
         message: "Invalid response format from ML service",
-        error: "Expected matched_ngos array"
+        error: "Expected matched_ngos array",
       });
     }
+
     const newRequest = new Request({
       donor: req.user.id,
       foodType,
@@ -141,23 +168,80 @@ export const donorRequest = async (req, res) => {
 
     await newRequest.save();
 
-    const top3 = matched_ngos.slice(0, 3);
+    const distanceKm = (lat1, lon1, lat2, lon2) => {
+      const toRad = (value) => (value * Math.PI) / 180;
+      const R = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) *
+          Math.cos(toRad(lat2)) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    const receivers = await Receiver.find({
+      $or: [
+        { "location.latitude": { $exists: true } },
+        { "location.lattitude": { $exists: true } },
+      ],
+      "location.longitude": { $exists: true },
+    });
+
     const assignedNgos = [];
 
-    for (const ngo of top3) {
-      try {
-        const dbNgo = await Receiver.findOne({ name: ngo.name });
-        if (dbNgo) {
+    for (const dbNgo of receivers) {
+      const receiverLat = parseFloat(dbNgo.location.latitude || dbNgo.location.lattitude);
+      const receiverLng = parseFloat(dbNgo.location.longitude);
+      if (Number.isNaN(receiverLat) || Number.isNaN(receiverLng)) {
+        continue;
+      }
+
+      const distance = distanceKm(lat, lng, receiverLat, receiverLng);
+      if (distance <= 15) {
+        try {
           if (!dbNgo.requests) dbNgo.requests = [];
           dbNgo.requests.push(newRequest._id);
           await dbNgo.save();
           assignedNgos.push(dbNgo.name);
-          console.log(`Request assigned to: ${dbNgo.name}`);
-        } else {
-          console.warn(`NGO not found in database: ${ngo.name}`);
+          console.log(`Request assigned to nearby receiver: ${dbNgo.name} (${distance.toFixed(2)} km)`);
+        } catch (assignError) {
+          console.error(`Error assigning request to receiver ${dbNgo.name}:`, assignError);
         }
-      } catch (ngoError) {
-        console.error(`Error assigning to NGO ${ngo.name}:`, ngoError);
+      }
+    }
+
+    if (assignedNgos.length === 0) {
+      console.warn("No receivers found within 15 km. Falling back to top ML-based receivers.");
+      const parseNgoName = (ngo) => {
+        if (!ngo) return null;
+        if (typeof ngo === "string") return ngo;
+        return ngo.name || ngo.organization || ngo.orgName || null;
+      };
+
+      const top3Names = matched_ngos
+        .map(parseNgoName)
+        .filter(Boolean)
+        .slice(0, 3);
+
+      for (const ngoName of top3Names) {
+        try {
+          const dbNgo = await Receiver.findOne({ name: ngoName });
+          if (dbNgo) {
+            if (!dbNgo.requests) dbNgo.requests = [];
+            dbNgo.requests.push(newRequest._id);
+            await dbNgo.save();
+            assignedNgos.push(dbNgo.name);
+            console.log(`Fallback assigned request to: ${dbNgo.name}`);
+          } else {
+            console.warn(`Fallback NGO not found in database: ${ngoName}`);
+          }
+        } catch (ngoError) {
+          console.error(`Error fallback assigning to NGO ${ngoName}:`, ngoError);
+        }
       }
     }
 

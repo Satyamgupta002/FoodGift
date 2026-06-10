@@ -8,6 +8,7 @@ function ReceiverLogin() {
   const [password, setPassword] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,6 +25,13 @@ function ReceiverLogin() {
       localStorage.setItem("token", response.data.token);
       navigate("/receiverDashboard");
     } catch (error) {
+      const responseMessage =
+        error.response?.data?.message || error.message || "Login failed";
+      const message =
+        error.response?.status === 401
+          ? "Invalid credentials. Please sign up if you don't have an account."
+          : responseMessage;
+      setLoginError(message);
       console.error("Login failed:", error.response?.data || error.message);
     }
   };
@@ -48,6 +56,11 @@ function ReceiverLogin() {
             <h2 className="text-2xl font-bold text-gray-900 mb-8">
               Welcome back
             </h2>
+            {loginError && (
+              <div className="mb-4 rounded-lg bg-red-100 px-4 py-3 text-red-700">
+                {loginError}
+              </div>
+            )}
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
                 <label

@@ -8,9 +8,11 @@ function DonorLogin() {
   const [password, setPassword] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoginError("");
     try {
       const response = await axios.post(
         "/api/auth/login",
@@ -25,6 +27,13 @@ function DonorLogin() {
       localStorage.setItem("token", response.data.token);
       navigate("/donorDashboard");
     } catch (error) {
+      const responseMessage =
+        error.response?.data?.message || error.message || "Login failed";
+      const message =
+        error.response?.status === 401
+          ? "Invalid credentials. Please sign up if you don't have an account."
+          : responseMessage;
+      setLoginError(message);
       console.error("Login failed:", error.response?.data || error.message);
     }
   };
@@ -48,6 +57,11 @@ function DonorLogin() {
             <h2 className="text-2xl font-bold text-gray-900 mb-8">
               Welcome back
             </h2>
+            {loginError && (
+              <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-900">
+                {loginError}
+              </div>
+            )}
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
                 <label

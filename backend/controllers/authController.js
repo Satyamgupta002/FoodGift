@@ -80,6 +80,7 @@ const { lat, lng } = geoRes.data.results[0].geometry;
         password: hashedPassword,
         location: {
           address: location,
+          latitude: lat.toString(),
           lattitude: lat.toString(),
           longitude: lng.toString(),
         },

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const Sidebar = ({ isOpen, toggleSidebar, activeTab, setActiveTab }) => {
+const Sidebar = ({ isOpen, toggleSidebar, activeTab, setActiveTab, requestCount }) => {
   const navigate = useNavigate(); 
 
   const handleLogout = () => {
@@ -29,8 +29,8 @@ const Sidebar = ({ isOpen, toggleSidebar, activeTab, setActiveTab }) => {
 
   return (
     <div
-      className={`bg-green-700 text-white h-screen fixed left-0 transition-all duration-300 ${
-        isOpen ? "w-1/8" : "w-20"
+      className={`bg-green-700 text-white h-screen fixed left-0 top-0 z-50 transition-all duration-300 ${
+        isOpen ? "w-56" : "w-20"
       }`}
     >
       <button
@@ -59,7 +59,14 @@ const Sidebar = ({ isOpen, toggleSidebar, activeTab, setActiveTab }) => {
                   }`}
               >
                 <Icon size={24} />
-                <span className={!isOpen ? "hidden" : ""}>{item.label}</span>
+                <span className={!isOpen ? "hidden" : "flex items-center justify-between w-full"}>
+                  {item.label}
+                  {item.id === "requests" && requestCount > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+                      {requestCount}
+                    </span>
+                  )}
+                </span>
               </button>
             );
           })}
@@ -149,33 +156,7 @@ const Dashboard = () => {
   );
 };
 
-const Requests = () => {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "/api/receiver/requests",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        setRequests(res.data.data || []);
-      } catch (error) {
-        console.error("Failed to fetch requests:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRequests();
-  }, []);
+const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
 
   const handleAccept = async (requestId) => {
     try {
@@ -190,8 +171,8 @@ const Requests = () => {
         }
       );
 
-      // Optimistically update the UI by removing the accepted request
       setRequests((prev) => prev.filter((req) => req._id !== requestId));
+      setRequestCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Failed to accept request:", error);
     }
@@ -234,15 +215,18 @@ const Requests = () => {
                         </p>
                         <p className="text-gray-600">
                           <span className="font-semibold">Expiry: </span>
-                          {req.expiryTime} Hours
+                          {new Date(req.expiryTime).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
                         </p>
                         <p className="text-gray-600">
                           <span className="font-semibold">Address: </span>
                           {req.location.address || "123 Main St, City, State"}
-                        </p>
-                        <p className="text-gray-600">
-                          <span className="font-semibold">Rating: </span>⭐{" "}
-                          {req.rating || "4.0"}/5
                         </p>
                       </div>
                     </div>
@@ -492,15 +476,47 @@ const PickupHistory = () => {
 function ReceiverDashbaord() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [requests, setRequests] = useState([]);
+  const [requestCount, setRequestCount] = useState(0);
+  const [requestsLoading, setRequestsLoading] = useState(true);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  useEffect(() => {
+    const fetchReceiverRequests = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("/api/receiver/requests", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const pendingRequests = res.data.data || [];
+        setRequests(pendingRequests);
+        setRequestCount(pendingRequests.length);
+      } catch (error) {
+        console.error("Error loading receiver requests:", error);
+      } finally {
+        setRequestsLoading(false);
+      }
+    };
+
+    fetchReceiverRequests();
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
         return <Dashboard />;
       case "requests":
-        return <Requests />;
+        return (
+          <Requests
+            requests={requests}
+            setRequests={setRequests}
+            setRequestCount={setRequestCount}
+            loading={requestsLoading}
+          />
+        );
       case "achievements":
         return <Achievements />;
       case "history":
@@ -517,14 +533,15 @@ function ReceiverDashbaord() {
         toggleSidebar={toggleSidebar}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        requestCount={requestCount}
       />
       <main
-        className={`transition-all duration-300 ${
-          sidebarOpen ? "ml-1/4" : "ml-16"
-        } p-8`}
+        className={`min-h-screen transition-all duration-300 ${
+          sidebarOpen ? "ml-56" : "ml-20"
+        } p-8 bg-gray-100`}
       >
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-bold mb-8 text-gray-800">
             {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
           </h1>
           {renderContent()}

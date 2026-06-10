@@ -34,10 +34,15 @@ export const getAllRequests = async (req, res) => {
   try {
     const receiverId = req.user.id; // assuming req.user is set via auth middleware
     // console.log(receiverId);
+    // Calculate 1 hour before now to filter out requests expiring soon
+    const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
     // Find receiver and populate their request documents
     const receiver = await Receiver.findById(receiverId).populate({
       path: "requests",
-      match: { status: "pending" },
+      match: { 
+        status: "pending",
+        expiryTime: { $gt: oneHourFromNow } // Only show requests expiring more than 1 hour away
+      },
       populate: {
         path: "donor",
         select: "name",

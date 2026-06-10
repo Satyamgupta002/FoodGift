@@ -47,5 +47,8 @@ const requestSchema = new mongoose.Schema({
   },
 });
 
+// Index to optimize queries filtering by expiry status
+requestSchema.index({ status: 1, expiryTime: 1 });
+
 const Request = mongoose.model("Request", requestSchema);
 export default Request;

@@ -3,12 +3,12 @@ import React from 'react';
 const Sidebar = ({ isOpen, menuItems, activeTab, setActiveTab }) => {
   return (
     <aside 
-      className={`bg-green-900 text-white transition-all duration-300 ${
-        isOpen ? 'w-64' : 'w-0'
-      } overflow-hidden`}
+      className={`bg-green-900 text-white transition-all duration-300 flex-shrink-0 overflow-y-auto ${
+        isOpen ? 'w-64' : 'w-20'
+      }`}
     >
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-green-100 mb-8">Donor Portal</h2>
+        <h2 className={`text-2xl font-bold text-green-100 mb-8 ${!isOpen && 'hidden'}`}>Donor Portal</h2>
         <nav className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;

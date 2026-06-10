@@ -14,6 +14,7 @@ import cors from "cors";
 import authRouter from "./routes/authRoutes.js";
 import donorRouter from "./routes/donorRoutes.js";
 import receiverRouter from "./routes/receiverRoutes.js";
+import { startExpiryJob } from "./jobs/expiryJob.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -61,6 +62,7 @@ const connectDb = async () => {
 
 /* ---------- START SERVER ---------- */
 await connectDb();
+startExpiryJob(); // Start the background expiry job
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

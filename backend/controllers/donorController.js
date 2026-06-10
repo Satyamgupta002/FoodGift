@@ -94,11 +94,10 @@ export const donorRequest = async (req, res) => {
 
     console.log("Coordinates:", { lat, lng });
 
-    let mlResponse;
+    let matched_ngos = [];
+    let mlUnavailable = false;
     try {
-      // Note: Using the internal service name 'http://donationserver-1.onrender.com' is good, 
-      // but ensure this is secure and correctly configured for internal requests in Render.
-      const mlServiceUrl = "https://foodgift-ml.onrender.com/predict-urgency";
+      const mlServiceUrl = process.env.ML_SERVICE_URL || "https://foodgift-ml.onrender.com/predict-urgency";
       const requestData = {
         food_type: foodType,
         quantity: approxPeople,
@@ -111,7 +110,7 @@ export const donorRequest = async (req, res) => {
 
       console.log("Sending to ML service:", requestData);
 
-      mlResponse = await axios.post(mlServiceUrl, requestData, {
+      const mlResponse = await axios.post(mlServiceUrl, requestData, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -120,7 +119,14 @@ export const donorRequest = async (req, res) => {
       });
       console.log("ML service response status:", mlResponse.status);
       console.log("ML service response data:", mlResponse.data);
+
+      if (mlResponse.data && Array.isArray(mlResponse.data.matched_ngos)) {
+        matched_ngos = mlResponse.data.matched_ngos;
+      } else {
+        console.warn("ML service returned unexpected response. Using local fallback.", mlResponse.data);
+      }
     } catch (mlError) {
+      mlUnavailable = true;
       console.error("ML Service Error Details:", {
         message: mlError.message,
         status: mlError.response?.status,
@@ -133,23 +139,7 @@ export const donorRequest = async (req, res) => {
         mlError.response.data.includes('<html>')) {
         console.error("ML service returned HTML instead of JSON - service might be down or misconfigured");
       }
-      return res.status(500).json({
-        message: "ML service unavailable",
-        error: {
-          service: "ML prediction service",
-          status: mlError.response?.status || 'No response',
-          details: mlError.message,
-        },
-        suggestion: "Please try again later or contact support"
-      });
-    }
-    const { urgency_score, matched_ngos } = mlResponse.data;
-    if (!matched_ngos || !Array.isArray(matched_ngos)) {
-      console.error("Invalid ML response format:", mlResponse.data);
-      return res.status(500).json({
-        message: "Invalid response format from ML service",
-        error: "Expected matched_ngos array",
-      });
+      console.warn("Continuing with donation submission using local receiver matching fallback.");
     }
 
     const newRequest = new Request({
@@ -246,11 +236,13 @@ export const donorRequest = async (req, res) => {
     }
 
     res.status(201).json({
-      message: "Request created successfully",
+      message: mlUnavailable
+        ? "Request created successfully, but ML matching is currently unavailable. Local matching fallback was used."
+        : "Request created successfully",
       request: newRequest,
-      urgency_score,
-      matched_ngos: top3,
+      matched_ngos,
       assigned_ngos: assignedNgos,
+      mlUnavailable,
     });
 
   } catch (error) {
@@ -272,12 +264,14 @@ export const getDonorRequests = async (req, res) => {
       "donor",
       "name phoneNumber email"
     );
+    // Sort by most recent first, showing both active and expired requests
+    requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.status(200).json(requests);
   } catch (error) {
     console.error("Error fetching requests:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
-};
+;}
 export const getDonorProfile = async (req, res) => {
   try {
     const { id } = req.user;

@@ -37,7 +37,7 @@ function AllShow() {
   };
 
   return (
-    <div className="flex h-screen bg-green-900/5">
+    <div className="flex h-screen bg-gray-100">
       <Sidebar 
         isOpen={isOpen} 
         menuItems={menuItems} 
@@ -46,15 +46,15 @@ function AllShow() {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-green-900 text-white shadow-lg">
-          <div className="flex items-center justify-between p-4">
-            <button onClick={toggleSidebar} className="text-white hover:text-green-200 transition-colors">
+        <header className="bg-green-800 text-white shadow-lg">
+          <div className="flex items-center justify-between px-6 py-4 gap-4">
+            <button onClick={toggleSidebar} className="text-white hover:text-green-200 transition-colors p-1 flex-shrink-0">
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <h1 className="text-2xl font-bold">Food Share Donor Dashboard</h1>
+            <h1 className="text-2xl font-bold flex-1 text-center">Donor Dashboard</h1>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-green-800 hover:bg-green-700 rounded-md transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-green-700 hover:bg-green-600 rounded-lg transition-all whitespace-nowrap flex-shrink-0"
             >
               <LogOut size={18} />
               <span className="text-sm font-medium">Logout</span>
@@ -62,8 +62,10 @@ function AllShow() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-green-900/5 to-green-900/10">
-          {renderContent()}
+        <main className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-green-50 to-blue-50">
+          <div className="max-w-7xl mx-auto">
+            {renderContent()}
+          </div>
         </main>
       </div>
     </div>

@@ -87,7 +87,7 @@ FoodGift is a full-stack web platform that connects **surplus food donors** with
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/FoodGift.git
+git clone https://github.com/Satyamgupta002/FoodGift.git
 cd FoodGift
 ```
 
@@ -130,12 +130,6 @@ JWT_SECRET=your_secret_key
 
 ---
 
-## 📸 Screenshots
-
-*Add screenshots of your UI here (dashboard, request flow, etc.)*
-
----
-
 ## 🎯 Use Cases
 
 * NGOs managing food distribution
@@ -148,6 +142,7 @@ JWT_SECRET=your_secret_key
 ## 👨‍💻 Author
 
 **Satyam Gupta**
+
 B.Tech, Electronics & Communication Engineering
 MANIT Bhopal
 

@@ -32,7 +32,7 @@ export default function PastActivities() {
   }, []);
   console.log(donations);
   const totalPeopleHelped = donations.reduce(
-    (sum, d) => sum + d.approxPeople,
+    (sum, d) => sum + (Number(d.approxPeople) || 0),
     0
   );
 
@@ -94,21 +94,35 @@ export default function PastActivities() {
                 {new Date(donation.createdAt).toLocaleDateString()}
               </div>
 
-              <div className="flex items-center text-gray-500 gap-2 text-sm">
-                <Users className="w-4 h-4" />
-                Helped approx.{" "}
-                <span className="text-primary font-medium">
-                  {donation.approxPeople}
-                </span>{" "}
-                people
-              </div>
-
-              <div className="flex items-center text-gray-500 gap-2 text-sm">
-                <MapPin className="w-4 h-4" />
-                Pickup Location:{" "}
-                <span className="text-primary font-medium">
-                  {donation.location?.address}
-                </span>
+              <div className="flex flex-col gap-2 text-gray-500 text-sm">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  {donation.donationType === 'food' ? (
+                    <>
+                      Helped approx. <span className="text-primary font-medium">{donation.approxPeople || 'N/A'}</span> people
+                    </>
+                  ) : donation.donationType === 'clothes' ? (
+                    <>
+                      {donation.quantity || 'N/A'} items of <span className="text-primary font-medium">{donation.clothesType || 'Clothes'}</span>
+                    </>
+                  ) : donation.donationType === 'toys' ? (
+                    <>
+                      {donation.quantity || 'N/A'} toys for <span className="text-primary font-medium">{donation.ageGroup || 'All ages'}</span>
+                    </>
+                  ) : donation.donationType === 'books' ? (
+                    <>
+                      {donation.quantity || 'N/A'} books by <span className="text-primary font-medium">{donation.author || 'Various'}</span>
+                    </>
+                  ) : (
+                    <>
+                      {donation.quantity || donation.approxPeople || 'N/A'} items
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Pickup Location: <span className="text-primary font-medium">{donation.location?.address || 'Unknown address'}</span>
+                </div>
               </div>
             </motion.div>
           ))}

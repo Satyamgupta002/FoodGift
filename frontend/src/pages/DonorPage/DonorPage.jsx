@@ -75,28 +75,31 @@ const DonorPage = () => {
           clothesType: clothesFormData.clothesType,
           size: clothesFormData.size,
           condition: clothesFormData.condition,
-          quantity: parseInt(clothesFormData.quantity),
+          quantity: Number.parseInt(clothesFormData.quantity, 10) || 0,
           location: clothesFormData.location,
           expiryTime: clothesFormData.expiry,
+          imageUrl: " ",
         };
       } else if (donationType === "toys") {
         payload = {
           donationType: "toys",
           condition: toysFormData.condition,
           ageGroup: toysFormData.ageGroup,
-          quantity: parseInt(toysFormData.quantity),
+          quantity: Number.parseInt(toysFormData.quantity, 10) || 0,
           location: toysFormData.location,
           expiryTime: toysFormData.expiry,
+          imageUrl: " ",
         };
       } else if (donationType === "books") {
         payload = {
           donationType: "books",
           title: booksFormData.title,
           author: booksFormData.author,
-          quantity: parseInt(booksFormData.quantity),
+          quantity: Number.parseInt(booksFormData.quantity, 10) || 0,
           condition: booksFormData.condition,
           location: booksFormData.location,
           expiryTime: booksFormData.expiry,
+          imageUrl: " ",
         };
       }
 
@@ -309,12 +312,13 @@ const DonorPage = () => {
         {/* CLOTHES DONATION FORM */}
         {donationType === "clothes" && (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-sm font-semibold text-green-800 mb-2">
                   Clothes Type
                 </label>
                 <select
+                  name="clothesType"
                   value={clothesFormData.clothesType}
                   onChange={(e) => handleChange('clothesType', e.target.value)}
                   className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
@@ -333,6 +337,7 @@ const DonorPage = () => {
                   Size
                 </label>
                 <select
+                  name="size"
                   value={clothesFormData.size}
                   onChange={(e) => handleChange('size', e.target.value)}
                   className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
@@ -347,12 +352,13 @@ const DonorPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-sm font-semibold text-green-800 mb-2">
                   Condition
                 </label>
                 <select
+                  name="condition"
                   value={clothesFormData.condition}
                   onChange={(e) => handleChange('condition', e.target.value)}
                   className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
@@ -369,6 +375,7 @@ const DonorPage = () => {
                   Quantity
                 </label>
                 <input
+                  name="quantity"
                   type="number"
                   value={clothesFormData.quantity}
                   onChange={(e) => handleChange('quantity', e.target.value)}
@@ -385,12 +392,13 @@ const DonorPage = () => {
         {/* TOYS DONATION FORM */}
         {donationType === "toys" && (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-sm font-semibold text-green-800 mb-2">
                   Condition
                 </label>
                 <select
+                  name="condition"
                   value={toysFormData.condition}
                   onChange={(e) => handleChange('condition', e.target.value)}
                   className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
@@ -406,6 +414,7 @@ const DonorPage = () => {
                   Age Group
                 </label>
                 <select
+                  name="ageGroup"
                   value={toysFormData.ageGroup}
                   onChange={(e) => handleChange('ageGroup', e.target.value)}
                   className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
@@ -424,6 +433,7 @@ const DonorPage = () => {
                 Quantity
               </label>
               <input
+                name="quantity"
                 type="number"
                 value={toysFormData.quantity}
                 onChange={(e) => handleChange('quantity', e.target.value)}
@@ -444,6 +454,7 @@ const DonorPage = () => {
                 Book Title
               </label>
               <input
+                name="title"
                 type="text"
                 value={booksFormData.title}
                 onChange={(e) => handleChange('title', e.target.value)}
@@ -458,6 +469,7 @@ const DonorPage = () => {
                 Author
               </label>
               <input
+                name="author"
                 type="text"
                 value={booksFormData.author}
                 onChange={(e) => handleChange('author', e.target.value)}
@@ -467,12 +479,13 @@ const DonorPage = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-sm font-semibold text-green-800 mb-2">
                   Quantity
                 </label>
                 <input
+                  name="quantity"
                   type="number"
                   value={booksFormData.quantity}
                   onChange={(e) => handleChange('quantity', e.target.value)}
@@ -488,6 +501,7 @@ const DonorPage = () => {
                   Condition
                 </label>
                 <select
+                  name="condition"
                   value={booksFormData.condition}
                   onChange={(e) => handleChange('condition', e.target.value)}
                   className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"

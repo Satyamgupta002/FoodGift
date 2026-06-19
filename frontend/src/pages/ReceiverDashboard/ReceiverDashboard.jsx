@@ -193,66 +193,110 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
         ) : (
           <div className="space-y-4">
             {requests.map((req, index) => {
-              if(req["status"]==='pending') {
-                return (<div key={req._id || index} className="border-b pb-4">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex gap-4">
-                    <img
-                      src={`https://picsum.photos/100?random=${index + 1}`}
-                      className="w-20 h-20 rounded-lg object-cover"
-                      alt="Food donation"
-                    />
-                    <div>
-                      <h4 className="font-semibold text-lg">
-                        {req.donor?.name || `Donor ${index + 1}`}
-                      </h4>
-                      <p className="text-gray-600">
-                        <span className="font-semibold">Contact: </span>
-                        {req.donor?.phoneNumber ? (
-                          <a href={`tel:${req.donor.phoneNumber}`} className="text-green-600 underline">
-                            {req.donor.phoneNumber}
-                          </a>
-                        ) : (
-                          "N/A"
-                        )}
-                      </p>
-                      <div className="space-y-1 mt-1">
-                        <p className="text-gray-600">
-                          <span className="font-semibold">Food Type: </span>
-                          {req.foodType || "Cooked Meals"}
-                        </p>
-                        <p className="text-gray-600">
-                          <span className="font-semibold">Servings: </span>
-                          {req.approxPeople}
-                        </p>
-                        <p className="text-gray-600">
-                          <span className="font-semibold">Expiry: </span>
-                          {new Date(req.expiryTime).toLocaleString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
-                        </p>
-                        <p className="text-gray-600">
-                          <span className="font-semibold">Address: </span>
-                          {req.location.address || "123 Main St, City, State"}
-                        </p>
+              if (req.status === 'pending') {
+                const donationTypeLabel = {
+                  food: 'Food',
+                  clothes: 'Clothes',
+                  toys: 'Toys',
+                  books: 'Books',
+                }[req.donationType] || 'Donation';
+
+                const donationDetails = [];
+                if (req.donationType === 'food') {
+                  donationDetails.push(
+                    { label: 'Food Type', value: req.foodType || 'Cooked Meals' },
+                    { label: 'Servings', value: req.approxPeople || 'N/A' }
+                  );
+                } else if (req.donationType === 'clothes') {
+                  donationDetails.push(
+                    { label: 'Clothes Type', value: req.clothesType || 'Mixed' },
+                    { label: 'Size', value: req.size || 'Mixed Sizes' },
+                    { label: 'Condition', value: req.condition || 'Good' },
+                    { label: 'Quantity', value: req.quantity ?? 'N/A' }
+                  );
+                } else if (req.donationType === 'toys') {
+                  donationDetails.push(
+                    { label: 'Age Group', value: req.ageGroup || 'All Ages' },
+                    { label: 'Condition', value: req.condition || 'Good' },
+                    { label: 'Quantity', value: req.quantity ?? 'N/A' }
+                  );
+                } else if (req.donationType === 'books') {
+                  donationDetails.push(
+                    { label: 'Title', value: req.title || 'Mixed Books' },
+                    { label: 'Author', value: req.author || 'Various' },
+                    { label: 'Quantity', value: req.quantity ?? 'N/A' },
+                    { label: 'Condition', value: req.condition || 'Good' }
+                  );
+                }
+
+                const formattedExpiry = req.expiryTime
+                  ? new Date(req.expiryTime).toLocaleString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true,
+                    })
+                  : 'N/A';
+
+                return (
+                  <div key={req._id || index} className="border-b pb-4">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex gap-4">
+                        <img
+                          src={`https://picsum.photos/100?random=${index + 1}`}
+                          className="w-20 h-20 rounded-lg object-cover"
+                          alt={`${donationTypeLabel} donation`}
+                        />
+                        <div>
+                          <h4 className="font-semibold text-lg">
+                            {req.donor?.name || `Donor ${index + 1}`}
+                          </h4>
+                          <p className="text-gray-600">
+                            <span className="font-semibold">Contact: </span>
+                            {req.donor?.phoneNumber ? (
+                              <a href={`tel:${req.donor.phoneNumber}`} className="text-green-600 underline">
+                                {req.donor.phoneNumber}
+                              </a>
+                            ) : (
+                              'N/A'
+                            )}
+                          </p>
+                          <p className="text-gray-600 mt-2">
+                            <span className="font-semibold">Donation Type: </span>
+                            {donationTypeLabel}
+                          </p>
+                          <div className="space-y-1 mt-2">
+                            {donationDetails.map((detail, detailIndex) => (
+                              <p key={detailIndex} className="text-gray-600">
+                                <span className="font-semibold">{detail.label}: </span>
+                                {detail.value}
+                              </p>
+                            ))}
+                            <p className="text-gray-600">
+                              <span className="font-semibold">Expiry: </span>
+                              {formattedExpiry}
+                            </p>
+                            <p className="text-gray-600">
+                              <span className="font-semibold">Address: </span>
+                              {req.location?.address || 'Unknown address'}
+                            </p>
+                          </div>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => handleAccept(req._id)}
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mt-2"
+                      >
+                        Accept
+                      </button>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleAccept(req._id)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mt-2"
-                  >
-                    Accept
-                  </button>
-                </div>
-              </div>)
+                );
               }
-})}
+              return null;
+            })}
           </div>
         )}
       </div>

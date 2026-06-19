@@ -3,8 +3,8 @@ import React from 'react';
 const Sidebar = ({ isOpen, menuItems, activeTab, setActiveTab }) => {
   return (
     <aside 
-      className={`bg-green-900 text-white transition-all duration-300 flex-shrink-0 overflow-y-auto ${
-        isOpen ? 'w-64' : 'w-20'
+      className={`bg-green-900 text-white transition-all duration-300 flex-shrink-0 overflow-hidden ${
+        isOpen ? 'w-64' : 'w-0'
       }`}
     >
       <div className="p-6">

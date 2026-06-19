@@ -6,7 +6,7 @@ import PastActivities from './PastActivities';
 import Profile from './Profile';
 import { useNavigate } from 'react-router-dom';
 function AllShow() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('donate');
   const navigate=useNavigate();
   const toggleSidebar = () => setIsOpen(!isOpen);

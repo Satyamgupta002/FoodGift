@@ -4,12 +4,11 @@ import { useEffect, useRef } from "react";
 
 const images = [
   "http://watchout.iitr.ac.in/images/posts/robin1.png",
-
   "https://www.taskus.com/wp-content/uploads/2022/09/IMG-20220910-WA0039.jpg",
-
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAeUSpx9uneCV0jYU-axmgsZPV485EqHePUxUydPqpEzvLJbVEgLfFax3X8ARitnM1ljw&usqp=CAU",
-  "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRWT2cVKW2imuxJUtGqRZzJsQtu-pDzPqJWmQ&s",
 ];
+const repeatCount = 7;
+const repeatedImages = Array.from({ length: repeatCount }, () => images).flat();
 
 export default function ReceiverDonorSlider() {
   const [sliderRef] = useKeenSlider({
@@ -47,14 +46,14 @@ export default function ReceiverDonorSlider() {
 
     const animate = () => {
       if (sliderTrackRef.current) {
-        offsetRef.current -= 0.5; // Speed control (lower = slower)
-        sliderTrackRef.current.style.transform = `translateX(${offsetRef.current}px)`;
-
-        // When half track is moved, reset back to 0
+        offsetRef.current -= 1.25; // speed control (higher = faster)
         const trackWidth = sliderTrackRef.current.scrollWidth / 2;
+
         if (Math.abs(offsetRef.current) >= trackWidth) {
-          offsetRef.current = 0;
+          offsetRef.current += trackWidth;
         }
+
+        sliderTrackRef.current.style.transform = `translateX(${offsetRef.current}px)`;
       }
       animationFrame = requestAnimationFrame(animate);
     };
@@ -70,9 +69,9 @@ export default function ReceiverDonorSlider() {
 
   return (
     <div className="w-full flex justify-center items-center py-10 bg-white overflow-hidden">
-      <div ref={sliderRef} className="keen-slider w-[90%] relative">
+      <div ref={sliderRef} className="keen-slider mx-auto w-[85%] max-w-[1400px] relative">
         <div ref={sliderTrackRef} className="flex">
-          {[...images, ...images].map((img, idx) => (
+          {repeatedImages.map((img, idx) => (
             <div
               key={idx}
               className="keen-slider__slide flex justify-center min-w-[150px]"

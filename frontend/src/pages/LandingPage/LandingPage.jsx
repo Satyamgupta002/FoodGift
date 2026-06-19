@@ -69,16 +69,7 @@ function LandingPage() {
             How It Works
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bell className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Get Notified</h3>
-              <p className="text-gray-600">
-                Receive instant notifications when donations become available in
-                your area.
-              </p>
-            </div>
+        
             <div className="text-center p-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Bell className="w-8 h-8 text-green-600" />
@@ -233,14 +224,14 @@ function LandingPage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-gray-900 text-white py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <Gift className="w-8 h-8" />
-              <span className="text-xl font-bold">FoodGift</span>
+              <Gift className="w-7 h-7" />
+              <span className="text-lg font-semibold">FoodGift</span>
             </div>
-            <div className="flex gap-6">
+            <div className="flex flex-wrap gap-4 text-sm">
               <a href="#" className="hover:text-green-400">
                 About
               </a>

@@ -7,7 +7,9 @@ const DonorPage = () => {
   const [foodFormData, setFoodFormData] = useState({
     foodType: "Cooked",
     people: "",
-    location: "",
+    localAddress: "",
+    city: "",
+    state: "",
     expiry: "",
     image: null,
   });
@@ -17,7 +19,9 @@ const DonorPage = () => {
     size: "M",
     condition: "New",
     quantity: "",
-    location: "",
+    localAddress: "",
+    city: "",
+    state: "",
     expiry: "",
   });
 
@@ -25,7 +29,9 @@ const DonorPage = () => {
     condition: "Good",
     ageGroup: "3-5",
     quantity: "",
-    location: "",
+    localAddress: "",
+    city: "",
+    state: "",
     expiry: "",
   });
 
@@ -34,7 +40,9 @@ const DonorPage = () => {
     author: "",
     quantity: "",
     condition: "Good",
-    location: "",
+    localAddress: "",
+    city: "",
+    state: "",
     expiry: "",
   });
 
@@ -65,7 +73,7 @@ const DonorPage = () => {
           donationType: "food",
           foodType: foodFormData.foodType,
           approxPeople: parseInt(foodFormData.people),
-          location: foodFormData.location,
+          location: `${foodFormData.localAddress}, ${foodFormData.city}, ${foodFormData.state}, India`,
           expiryTime: foodFormData.expiry,
           imageUrl: " ",
         };
@@ -76,7 +84,7 @@ const DonorPage = () => {
           size: clothesFormData.size,
           condition: clothesFormData.condition,
           quantity: Number.parseInt(clothesFormData.quantity, 10) || 0,
-          location: clothesFormData.location,
+          location: `${clothesFormData.localAddress}, ${clothesFormData.city}, ${clothesFormData.state}, India`,
           expiryTime: clothesFormData.expiry,
           imageUrl: " ",
         };
@@ -86,7 +94,7 @@ const DonorPage = () => {
           condition: toysFormData.condition,
           ageGroup: toysFormData.ageGroup,
           quantity: Number.parseInt(toysFormData.quantity, 10) || 0,
-          location: toysFormData.location,
+          location: `${toysFormData.localAddress}, ${toysFormData.city}, ${toysFormData.state}, India`,
           expiryTime: toysFormData.expiry,
           imageUrl: " ",
         };
@@ -97,7 +105,7 @@ const DonorPage = () => {
           author: booksFormData.author,
           quantity: Number.parseInt(booksFormData.quantity, 10) || 0,
           condition: booksFormData.condition,
-          location: booksFormData.location,
+          location: `${booksFormData.localAddress}, ${booksFormData.city}, ${booksFormData.state}, India`,
           expiryTime: booksFormData.expiry,
           imageUrl: " ",
         };
@@ -124,7 +132,9 @@ const DonorPage = () => {
         setFoodFormData({
           foodType: "Cooked",
           people: "",
-          location: "",
+          localAddress: "",
+          city: "",
+          state: "",
           expiry: "",
           image: null,
         });
@@ -134,7 +144,9 @@ const DonorPage = () => {
           size: "M",
           condition: "New",
           quantity: "",
-          location: "",
+          localAddress: "",
+          city: "",
+          state: "",
           expiry: "",
         });
       } else if (donationType === "toys") {
@@ -142,7 +154,9 @@ const DonorPage = () => {
           condition: "Good",
           ageGroup: "3-5",
           quantity: "",
-          location: "",
+          localAddress: "",
+          city: "",
+          state: "",
           expiry: "",
         });
       } else if (donationType === "books") {
@@ -151,7 +165,9 @@ const DonorPage = () => {
           author: "",
           quantity: "",
           condition: "Good",
-          location: "",
+          localAddress: "",
+          city: "",
+          state: "",
           expiry: "",
         });
       }
@@ -520,19 +536,50 @@ const DonorPage = () => {
           <label className="block text-sm font-semibold text-green-800 mb-2">
             Pickup Location
           </label>
-          <input
-            type="text"
-            value={
-              donationType === "food" ? foodFormData.location :
-              donationType === "clothes" ? clothesFormData.location :
-              donationType === "toys" ? toysFormData.location :
-              booksFormData.location
-            }
-            onChange={(e) => handleChange('location', e.target.value)}
-            className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-            placeholder="Enter pickup address"
-            required
-          />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <input
+              type="text"
+              value={
+                donationType === "food" ? foodFormData.localAddress :
+                donationType === "clothes" ? clothesFormData.localAddress :
+                donationType === "toys" ? toysFormData.localAddress :
+                booksFormData.localAddress
+              }
+              onChange={(e) => handleChange('localAddress', e.target.value)}
+              className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              placeholder="Local address"
+              required
+            />
+            <input
+              type="text"
+              value={
+                donationType === "food" ? foodFormData.city :
+                donationType === "clothes" ? clothesFormData.city :
+                donationType === "toys" ? toysFormData.city :
+                booksFormData.city
+              }
+              onChange={(e) => handleChange('city', e.target.value)}
+              className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              placeholder="City / District"
+              required
+            />
+            <input
+              type="text"
+              value={
+                donationType === "food" ? foodFormData.state :
+                donationType === "clothes" ? clothesFormData.state :
+                donationType === "toys" ? toysFormData.state :
+                booksFormData.state
+              }
+              onChange={(e) => handleChange('state', e.target.value)}
+              className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              placeholder="State"
+              required
+            />
+          </div>
+          <p className="mt-2 text-xs text-gray-500">
+            Address will be sent as a single string ending with India.
+          </p>
         </div>
 
         <div>

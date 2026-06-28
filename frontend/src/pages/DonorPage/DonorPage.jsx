@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "../../config/axiosConfig.js";
+import { indianStates, citiesByState } from "./indianLocations.js";
 
 const DonorPage = () => {
   const [donationType, setDonationType] = useState("food");
@@ -550,36 +551,68 @@ const DonorPage = () => {
               placeholder="Local address"
               required
             />
-            <input
-              type="text"
-              value={
-                donationType === "food" ? foodFormData.city :
-                donationType === "clothes" ? clothesFormData.city :
-                donationType === "toys" ? toysFormData.city :
-                booksFormData.city
-              }
-              onChange={(e) => handleChange('city', e.target.value)}
-              className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-              placeholder="City / District"
-              required
-            />
-            <input
-              type="text"
-              value={
-                donationType === "food" ? foodFormData.state :
-                donationType === "clothes" ? clothesFormData.state :
-                donationType === "toys" ? toysFormData.state :
-                booksFormData.state
-              }
-              onChange={(e) => handleChange('state', e.target.value)}
-              className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
-              placeholder="State"
-              required
-            />
+            <div>
+              <select
+                value={
+                  donationType === "food" ? foodFormData.state :
+                  donationType === "clothes" ? clothesFormData.state :
+                  donationType === "toys" ? toysFormData.state :
+                  booksFormData.state
+                }
+                onChange={(e) => {
+                  handleChange('state', e.target.value);
+                  handleChange('city', '');
+                }}
+                className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                required
+              >
+                <option value="">Select State</option>
+                {indianStates.map((stateOption) => (
+                  <option key={stateOption.value} value={stateOption.value}>
+                    {stateOption.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <select
+                value={
+                  donationType === "food" ? foodFormData.city :
+                  donationType === "clothes" ? clothesFormData.city :
+                  donationType === "toys" ? toysFormData.city :
+                  booksFormData.city
+                }
+                onChange={(e) => handleChange('city', e.target.value)}
+                className="w-full rounded-lg border-2 border-green-200 py-3 px-4 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                required
+                disabled={
+                  !(
+                    donationType === "food" ? foodFormData.state :
+                    donationType === "clothes" ? clothesFormData.state :
+                    donationType === "toys" ? toysFormData.state :
+                    booksFormData.state
+                  )
+                }
+              >
+                <option value="">Select City</option>
+                {
+                  (
+                    citiesByState[
+                      donationType === "food" ? foodFormData.state :
+                      donationType === "clothes" ? clothesFormData.state :
+                      donationType === "toys" ? toysFormData.state :
+                      booksFormData.state
+                    ] || []
+                  ).map((cityOption) => (
+                    <option key={cityOption} value={cityOption}>
+                      {cityOption}
+                    </option>
+                  ))
+                }
+              </select>
+            </div>
           </div>
-          <p className="mt-2 text-xs text-gray-500">
-            Address will be sent as a single string ending with India.
-          </p>
+         
         </div>
 
         <div>

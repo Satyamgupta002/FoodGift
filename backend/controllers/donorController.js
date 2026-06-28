@@ -6,6 +6,7 @@ import Receiver from "../models/receiverModel.js";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import expiryQueue from "../queues/expiryQueue.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -191,6 +192,16 @@ export const donorRequest = async (req, res) => {
     const newRequest = new Request(requestPayload);
     await newRequest.save();
 
+    // Enqueue a delayed job to mark this request expired at `expiryTime`
+    try {
+      const exp = new Date(newRequest.expiryTime).getTime();
+      let delay = exp - Date.now();
+      if (delay < 0) delay = 0;
+      await expiryQueue.add("expire-request", { requestId: newRequest._id.toString() }, { delay, removeOnComplete: true, attempts: 3 });
+    } catch (queueErr) {
+      console.error("Failed to enqueue expiry job:", queueErr);
+    }
+
     const distanceKm = (lat1, lon1, lat2, lon2) => {
       const toRad = (value) => (value * Math.PI) / 180;
       const R = 6371;
@@ -293,6 +304,12 @@ export const donorRequest = async (req, res) => {
 export const getDonorRequests = async (req, res) => {
   const { id } = req.user;
   try {
+    // Fallback: ensure any requests that already passed expiryTime are marked expired
+    try {
+      await Request.updateMany({ status: { $ne: "expired" }, expiryTime: { $lte: new Date() } }, { $set: { status: "expired" } });
+    } catch (updateErr) {
+      console.error("Error updating expired requests on read:", updateErr);
+    }
     const requests = await Request.find({ donor: id }).populate(
       "donor",
       "name phoneNumber email"

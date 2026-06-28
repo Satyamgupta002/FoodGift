@@ -8,9 +8,11 @@ import {
   Trophy,
   Clock,
   LogOut,
-  User
+  User,
+  MapPin
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { calculateDistance, formatDistance } from "../../utils/distanceCalculator.js";
 
 const Sidebar = ({ isOpen, toggleSidebar, activeTab, setActiveTab, requestCount }) => {
   const navigate = useNavigate(); 
@@ -159,6 +161,26 @@ const Dashboard = () => {
 };
 
 const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
+  const [receiverLocation, setReceiverLocation] = useState(null);
+
+  useEffect(() => {
+    const fetchReceiverLocation = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("/api/receiver/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        setReceiverLocation(response.data.receiver?.location || null);
+      } catch (error) {
+        console.error("Error fetching receiver location:", error);
+      }
+    };
+
+    fetchReceiverLocation();
+  }, []);
 
   const handleAccept = async (requestId) => {
     try {
@@ -178,6 +200,24 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
     } catch (error) {
       console.error("Failed to accept request:", error);
     }
+  };
+
+  const getDistanceLabel = (donorLocation) => {
+    if (!receiverLocation || !donorLocation) {
+      return "Distance not available";
+    }
+
+    const lat1 = parseFloat(receiverLocation.latitude || receiverLocation.lattitude);
+    const lon1 = parseFloat(receiverLocation.longitude);
+    const lat2 = parseFloat(donorLocation.latitude || donorLocation.lattitude);
+    const lon2 = parseFloat(donorLocation.longitude);
+
+    if ([lat1, lon1, lat2, lon2].some((value) => Number.isNaN(value))) {
+      return "Distance not available";
+    }
+
+    const distance = calculateDistance(lat1, lon1, lat2, lon2);
+    return formatDistance(distance);
   };
 
   if (loading) return <p className="p-4 text-gray-500">Loading requests...</p>;
@@ -274,6 +314,13 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
                                 {detail.value}
                               </p>
                             ))}
+                            <p className="text-gray-600">
+                              <span className="font-semibold">Distance: </span>
+                              <span className="inline-flex items-center gap-1 text-green-600 font-medium">
+                                <MapPin size={14} />
+                                {getDistanceLabel(req.location)}
+                              </span>
+                            </p>
                             <p className="text-gray-600">
                               <span className="font-semibold">Expiry: </span>
                               {formattedExpiry}

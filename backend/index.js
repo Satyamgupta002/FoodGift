@@ -31,7 +31,10 @@ app.use(cors({
 }));
 
 
-app.use(express.json());
+// Allow larger payloads for base64-encoded images sent in JSON (adjust as needed)
+app.use(express.json({ limit: '20mb' }));
+// Also parse URL-encoded bodies with a similar limit
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 /* ---------- ROUTES ---------- */
 app.use("/api/auth", authRouter);

@@ -6,6 +6,9 @@ import axios from "../../config/axiosConfig.js";
 export default function PastActivities() {
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingCancelId, setPendingCancelId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     const fetchDonorRequests = async () => {
@@ -30,11 +33,51 @@ export default function PastActivities() {
 
     fetchDonorRequests();
   }, []);
-  console.log(donations);
-  const totalPeopleHelped = donations.reduce(
-    (sum, d) => sum + (Number(d.approxPeople) || 0),
-    0
-  );
+  const openCancelConfirm = (requestId) => {
+    setPendingCancelId(requestId);
+    setErrorMessage("");
+    setConfirmOpen(true);
+  };
+
+  const handleCancelDonation = async () => {
+    if (!pendingCancelId) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `/api/donor/cancel-request/${pendingCancelId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setDonations((prev) =>
+        prev.map((donation) =>
+          donation._id === pendingCancelId ? { ...donation, status: "cancelled" } : donation
+        )
+      );
+      setConfirmOpen(false);
+      setPendingCancelId(null);
+    } catch (error) {
+      console.error("Error cancelling donation request:", error);
+      setErrorMessage(error.response?.data?.message || "Failed to cancel this request.");
+    }
+  };
+
+  const totalPeopleHelped = donations.reduce((sum, donation) => {
+    if (!["accepted", "collected", "picked up"].includes(donation.status)) {
+      return sum;
+    }
+
+    if (donation.donationType === "food") {
+      return sum + (Number(donation.approxPeople) || 0);
+    }
+
+    return sum + (Number(donation.quantity) || 0);
+  }, 0);
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -51,7 +94,7 @@ export default function PastActivities() {
         <p className="text-lg text-gray-700 mt-4">
           Till date, you have helped over{" "}
           <span className="text-green-600 font-bold text-3xl">
-            {totalPeopleHelped}
+            {loading ? "—" : totalPeopleHelped}
           </span>{" "}
           people!
         </p>
@@ -66,6 +109,12 @@ export default function PastActivities() {
           </span>
         </motion.div>
       </motion.div>
+
+      {errorMessage && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {errorMessage}
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center text-gray-500">Loading...</div>
@@ -83,10 +132,18 @@ export default function PastActivities() {
               transition={{ duration: 0.4, delay: index * 0.1 }}
               className="rounded-2xl shadow-md hover:shadow-lg transition-shadow bg-white p-6 space-y-4"
             >
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-800">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-semibold text-gray-800 capitalize">
                   {donation.status || "Awaiting Pickup"}
                 </h2>
+                {donation.status === "pending" && (
+                  <button
+                    onClick={() => openCancelConfirm(donation._id)}
+                    className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-100"
+                  >
+                    Cancel Request
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center text-gray-500 gap-2 text-sm">
@@ -126,6 +183,35 @@ export default function PastActivities() {
               </div>
             </motion.div>
           ))}
+        </div>
+      )}
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900">Cancel this request?</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              This action will cancel the donation request and cannot be undone.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setConfirmOpen(false);
+                  setPendingCancelId(null);
+                  setErrorMessage("");
+                }}
+                className="rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+              >
+                Keep Request
+              </button>
+              <button
+                onClick={handleCancelDonation}
+                className="rounded-full bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

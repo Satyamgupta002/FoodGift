@@ -285,8 +285,8 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
                     <div className="flex justify-between items-start gap-4">
                       <div className="flex gap-4">
                         <img
-                          src={`https://picsum.photos/100?random=${index + 1}`}
-                          className="w-20 h-20 rounded-lg object-cover"
+                          src={req.imageUrl || `https://picsum.photos/100?random=${index + 1}`}
+                          className="w-20 h-20 rounded-lg object-cover bg-gray-100"
                           alt={`${donationTypeLabel} donation`}
                         />
                         <div>

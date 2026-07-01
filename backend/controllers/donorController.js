@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import expiryQueue from "../queues/expiryQueue.js";
+import cloudinary from "../config/cloudinaryConfig.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +58,6 @@ export const donorRequest = async (req, res) => {
       author,
       location,
       expiryTime,
-      imageUrl,
     } = req.body;
     console.log(req.body);
 
@@ -102,6 +102,21 @@ export const donorRequest = async (req, res) => {
     const { lat, lng } = geoRes.data.results[0].geometry;
 
     console.log("Coordinates:", { lat, lng });
+
+    // If multer provided a file buffer, upload it to Cloudinary and use returned URL
+    let imageUrl = "";
+    if (req.file && req.file.buffer) {
+      try {
+        const dataUri = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
+        const uploadResult = await cloudinary.uploader.upload(dataUri, {
+          folder: "foodgift_requests",
+          resource_type: "image",
+        });
+        imageUrl = uploadResult.secure_url;
+      } catch (uploadErr) {
+        console.error("Cloudinary upload error:", uploadErr);
+      }
+    }
 
     let matched_ngos = [];
     let mlUnavailable = false;
@@ -166,13 +181,13 @@ export const donorRequest = async (req, res) => {
       },
       expiryTime,
       status: "pending",
+      imageUrl: imageUrl || "",
     };
 
     // Add type-specific fields
     if (donationType === "food") {
       requestPayload.foodType = foodType;
       requestPayload.approxPeople = approxPeople;
-      requestPayload.imageUrl = imageUrl || " ";
     } else if (donationType === "clothes") {
       requestPayload.clothesType = clothesType;
       requestPayload.size = size;
@@ -301,6 +316,45 @@ export const donorRequest = async (req, res) => {
     });
   }
 };
+export const cancelDonationRequest = async (req, res) => {
+  const { requestId } = req.params;
+  const donorId = req.user.id;
+
+  try {
+    const request = await Request.findById(requestId);
+
+    if (!request) {
+      return res.status(404).json({ message: "Donation request not found" });
+    }
+
+    if (request.donor.toString() !== donorId) {
+      return res.status(403).json({ message: "You can only cancel your own requests" });
+    }
+
+    if (["accepted", "collected", "expired", "cancelled"].includes(request.status)) {
+      return res.status(400).json({
+        message: `This request cannot be cancelled because it is already ${request.status}`,
+      });
+    }
+
+    request.status = "cancelled";
+    await request.save();
+
+    await Receiver.updateMany(
+      { requests: requestId },
+      { $pull: { requests: requestId } }
+    );
+
+    res.status(200).json({
+      message: "Donation request cancelled successfully",
+      request,
+    });
+  } catch (error) {
+    console.error("Error cancelling donation request:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const getDonorRequests = async (req, res) => {
   const { id } = req.user;
   try {
@@ -321,7 +375,7 @@ export const getDonorRequests = async (req, res) => {
     console.error("Error fetching requests:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
-;}
+};
 export const getDonorProfile = async (req, res) => {
   try {
     const { id } = req.user;

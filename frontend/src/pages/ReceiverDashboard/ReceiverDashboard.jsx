@@ -719,31 +719,55 @@ const PickupHistory = () => {
         <p className="text-gray-600">No pickups found.</p>
       ) : (
         <div className="space-y-4">
-          {pickups.map((pickup, index) => (
-            <div
-              key={pickup._id || index}
-              className="flex items-center justify-between border-b pb-4"
-            >
-              <div>
-                <h4 className="font-semibold">Pickup #{index + 1}</h4>
-                <p className="text-gray-600">
-                  From: {pickup?.donor?.name || "Donor"}
-                </p>
-                <p className="text-sm text-gray-500">
-                  Date:{" "}
-                  {new Date(
-                    pickup.createdAt || pickup?.request?.createdAt
-                  ).toLocaleDateString()}
-                </p>
+          {pickups.map((pickup, index) => {
+            const request = pickup?.request || {};
+            const donationType = request.donationType || "unknown";
+            const donorContact = pickup?.donor?.phoneNumber || pickup?.donor?.email || "N/A";
+            let donationQuantityLabel = "";
+
+            if (donationType === "food") {
+              donationQuantityLabel = `${request.approxPeople ?? "?"} meals`;
+            } else if (donationType === "clothes") {
+              donationQuantityLabel = `${request.quantity ?? "?"} items`;
+            } else if (donationType === "toys") {
+              donationQuantityLabel = `${request.quantity ?? "?"} toys`;
+            } else if (donationType === "books") {
+              donationQuantityLabel = `${request.quantity ?? "?"} books`;
+            } else {
+              donationQuantityLabel = `${request.quantity ?? request.approxPeople ?? "?"} items`;
+            }
+
+            const donationTypeLabel = donationType
+              .split(" ")
+              .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+              .join(" ");
+
+            return (
+              <div
+                key={pickup._id || index}
+                className="flex items-center justify-between border-b pb-4"
+              >
+                <div>
+                  <h4 className="font-semibold">Pickup #{index + 1}</h4>
+                  <p className="text-gray-600">
+                    From: {pickup?.donor?.name || "Donor"}
+                  </p>
+                  <p className="text-gray-600">Contact: {donorContact}</p>
+                  <p className="text-sm text-gray-500">
+                    Date:{" "}
+                    {new Date(
+                      pickup.createdAt || pickup?.request?.createdAt
+                    ).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold">{donationTypeLabel}</p>
+                  <p className="text-gray-600">{donationQuantityLabel}</p>
+                  <p className="text-green-600 capitalize">{pickup.status}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold">
-                  {pickup?.request?.approxPeople || "?"} meals
-                </p>
-                <p className="text-green-600 capitalize">{pickup.status}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

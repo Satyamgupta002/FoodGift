@@ -3,6 +3,7 @@ dotenv.config();
 
 import { Worker, Queue } from 'bullmq';
 import Request from '../models/requestModel.js';
+import { shouldMarkRequestAsExpired } from '../utils/requestStatus.js';
 const getConnection = () => {
   if (process.env.REDIS_URL) {
     return { url: process.env.REDIS_URL };
@@ -32,6 +33,11 @@ export const startExpiryWorker = () => {
       if (exp > now) {
         const delay = exp - now;
         await expiryQueue.add('expire-request', { requestId }, { delay, removeOnComplete: true, attempts: 3 });
+        return;
+      }
+
+      if (!shouldMarkRequestAsExpired(request.status)) {
+        console.log(`ExpiryWorker: skipping expiry update for request ${requestId} in status ${request.status}`);
         return;
       }
 

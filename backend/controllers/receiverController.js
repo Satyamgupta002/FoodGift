@@ -147,13 +147,13 @@ export const getPickupHistory = async (req, res) => {
 
     // 1. Fetch all pickups done by this receiver
     const pickups = await Pickup.find({ receiver: receiverId })
-      .populate("donor", "name email") // Optional: populate donor info
-      .populate("request"); // Optional: populate full request info
+      .populate("donor", "name email phoneNumber")
+      .populate("request");
 
     res.status(200).json({
       success: true,
       message: "Pickup history fetched successfully",
-      pickups, // array of all pickup objects
+      pickups,
     });
   } catch (error) {
     console.error("Error in getPickupHistory:", error);

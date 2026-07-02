@@ -68,11 +68,11 @@ export default function PastActivities() {
   };
 
   const totalPeopleHelped = donations.reduce((sum, donation) => {
-    if (!["accepted", "collected", "picked up"].includes(donation.status)) {
+    if (!['accepted', 'collected', 'picked up'].includes(donation.status)) {
       return sum;
     }
 
-    if (donation.donationType === "food") {
+    if (donation.donationType === 'food') {
       return sum + (Number(donation.approxPeople) || 0);
     }
 

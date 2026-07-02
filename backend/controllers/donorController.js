@@ -8,6 +8,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import expiryQueue from "../queues/expiryQueue.js";
 import cloudinary from "../config/cloudinaryConfig.js";
+import Pickup from "../models/pickupModel.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -331,7 +332,7 @@ export const cancelDonationRequest = async (req, res) => {
       return res.status(403).json({ message: "You can only cancel your own requests" });
     }
 
-    if (["accepted", "collected", "expired", "cancelled"].includes(request.status)) {
+    if (["accepted", "collected", "picked up", "expired", "cancelled"].includes(request.status)) {
       return res.status(400).json({
         message: `This request cannot be cancelled because it is already ${request.status}`,
       });
@@ -358,9 +359,28 @@ export const cancelDonationRequest = async (req, res) => {
 export const getDonorRequests = async (req, res) => {
   const { id } = req.user;
   try {
-    // Fallback: ensure any requests that already passed expiryTime are marked expired
     try {
-      await Request.updateMany({ status: { $ne: "expired" }, expiryTime: { $lte: new Date() } }, { $set: { status: "expired" } });
+      const pickupRequestIds = await Pickup.distinct("request", {
+        status: { $in: ["completed"] },
+      });
+
+      if (pickupRequestIds.length > 0) {
+        await Request.updateMany(
+          {
+            _id: { $in: pickupRequestIds },
+            status: "expired",
+          },
+          { $set: { status: "picked up" } }
+        );
+      }
+
+      await Request.updateMany(
+        {
+          status: { $in: ["pending", "accepted"] },
+          expiryTime: { $lte: new Date() },
+        },
+        { $set: { status: "expired" } }
+      );
     } catch (updateErr) {
       console.error("Error updating expired requests on read:", updateErr);
     }

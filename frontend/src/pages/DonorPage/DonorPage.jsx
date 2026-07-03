@@ -67,56 +67,47 @@ const DonorPage = () => {
         return;
       }
 
-      let payload;
-      
+      const formData = new FormData();
+
       if (donationType === "food") {
-        payload = {
-          donationType: "food",
-          foodType: foodFormData.foodType,
-          approxPeople: parseInt(foodFormData.people),
-          location: `${foodFormData.localAddress}, ${foodFormData.city}, ${foodFormData.state}, India`,
-          expiryTime: foodFormData.expiry,
-          imageUrl: " ",
-        };
+        formData.append("donationType", "food");
+        formData.append("foodType", foodFormData.foodType);
+        formData.append("approxPeople", parseInt(foodFormData.people, 10));
+        formData.append("location", `${foodFormData.localAddress}, ${foodFormData.city}, ${foodFormData.state}, India`);
+        formData.append("expiryTime", foodFormData.expiry);
+        if (foodFormData.image) {
+          formData.append("image", foodFormData.image);
+        }
       } else if (donationType === "clothes") {
-        payload = {
-          donationType: "clothes",
-          clothesType: clothesFormData.clothesType,
-          size: clothesFormData.size,
-          condition: clothesFormData.condition,
-          quantity: Number.parseInt(clothesFormData.quantity, 10) || 0,
-          location: `${clothesFormData.localAddress}, ${clothesFormData.city}, ${clothesFormData.state}, India`,
-          expiryTime: clothesFormData.expiry,
-          imageUrl: " ",
-        };
+        formData.append("donationType", "clothes");
+        formData.append("clothesType", clothesFormData.clothesType);
+        formData.append("size", clothesFormData.size);
+        formData.append("condition", clothesFormData.condition);
+        formData.append("quantity", Number.parseInt(clothesFormData.quantity, 10) || 0);
+        formData.append("location", `${clothesFormData.localAddress}, ${clothesFormData.city}, ${clothesFormData.state}, India`);
+        formData.append("expiryTime", clothesFormData.expiry);
       } else if (donationType === "toys") {
-        payload = {
-          donationType: "toys",
-          condition: toysFormData.condition,
-          ageGroup: toysFormData.ageGroup,
-          quantity: Number.parseInt(toysFormData.quantity, 10) || 0,
-          location: `${toysFormData.localAddress}, ${toysFormData.city}, ${toysFormData.state}, India`,
-          expiryTime: toysFormData.expiry,
-          imageUrl: " ",
-        };
+        formData.append("donationType", "toys");
+        formData.append("condition", toysFormData.condition);
+        formData.append("ageGroup", toysFormData.ageGroup);
+        formData.append("quantity", Number.parseInt(toysFormData.quantity, 10) || 0);
+        formData.append("location", `${toysFormData.localAddress}, ${toysFormData.city}, ${toysFormData.state}, India`);
+        formData.append("expiryTime", toysFormData.expiry);
       } else if (donationType === "books") {
-        payload = {
-          donationType: "books",
-          title: booksFormData.title,
-          author: booksFormData.author,
-          quantity: Number.parseInt(booksFormData.quantity, 10) || 0,
-          condition: booksFormData.condition,
-          location: `${booksFormData.localAddress}, ${booksFormData.city}, ${booksFormData.state}, India`,
-          expiryTime: booksFormData.expiry,
-          imageUrl: " ",
-        };
+        formData.append("donationType", "books");
+        formData.append("title", booksFormData.title);
+        formData.append("author", booksFormData.author);
+        formData.append("quantity", Number.parseInt(booksFormData.quantity, 10) || 0);
+        formData.append("condition", booksFormData.condition);
+        formData.append("location", `${booksFormData.localAddress}, ${booksFormData.city}, ${booksFormData.state}, India`);
+        formData.append("expiryTime", booksFormData.expiry);
       }
 
-      console.log("Submitting:", payload);
+      console.log("Submitting with FormData");
 
       const res = await axios.post(
         "/api/donor/donor-request",
-        payload,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,

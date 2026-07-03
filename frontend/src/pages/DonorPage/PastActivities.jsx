@@ -9,6 +9,7 @@ export default function PastActivities() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingCancelId, setPendingCancelId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [otpState, setOtpState] = useState({});
 
   useEffect(() => {
     const fetchDonorRequests = async () => {
@@ -64,6 +65,38 @@ export default function PastActivities() {
     } catch (error) {
       console.error("Error cancelling donation request:", error);
       setErrorMessage(error.response?.data?.message || "Failed to cancel this request.");
+    }
+  };
+
+  const handleGenerateOtp = async (requestId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(`/api/donor/generate-pickup-otp/${requestId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOtpState((prev) => ({ ...prev, [requestId]: { stage: "input" } }));
+      setErrorMessage("");
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Failed to generate OTP.");
+    }
+  };
+
+  const handleVerifyOtp = async (requestId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const otp = otpState[requestId]?.value || "";
+      const response = await axios.post(`/api/donor/verify-pickup-otp/${requestId}`, { otp }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDonations((prev) => prev.map((donation) => donation._id === requestId ? { ...donation, status: response.data.request.status } : donation));
+      setOtpState((prev) => ({ ...prev, [requestId]: { stage: "verified" } }));
+      setErrorMessage("");
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to verify OTP.";
+      if (message === "OTP expired") {
+        setOtpState((prev) => ({ ...prev, [requestId]: { stage: "input" } }));
+      }
+      setErrorMessage(message);
     }
   };
 
@@ -133,9 +166,16 @@ export default function PastActivities() {
               className="rounded-2xl shadow-md hover:shadow-lg transition-shadow bg-white p-6 space-y-4"
             >
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-xl font-semibold text-gray-800 capitalize">
-                  {donation.status || "Awaiting Pickup"}
-                </h2>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800 capitalize">
+                    {donation.status || "Awaiting Pickup"}
+                  </h2>
+                  {donation.status === "accepted" && donation.acceptedBy && (
+                    <p className="mt-1 text-sm text-green-600 font-medium">
+                      Accepted By: {donation.acceptedBy.organizationName || donation.acceptedBy.name || "NGO"}
+                    </p>
+                  )}
+                </div>
                 {donation.status === "pending" && (
                   <button
                     onClick={() => openCancelConfirm(donation._id)}
@@ -145,6 +185,35 @@ export default function PastActivities() {
                   </button>
                 )}
               </div>
+
+              {donation.status === "accepted" && (
+                <div className="flex flex-col gap-2 rounded-xl border border-green-100 bg-green-50 p-3">
+                  {otpState[donation._id]?.stage === "input" ? (
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <input
+                        type="text"
+                        value={otpState[donation._id]?.value || ""}
+                        onChange={(e) => setOtpState((prev) => ({ ...prev, [donation._id]: { ...prev[donation._id], value: e.target.value } }))}
+                        placeholder="Enter 6-digit OTP"
+                        className="flex-1 rounded-lg border border-green-200 px-3 py-2 text-sm"
+                      />
+                      <button
+                        onClick={() => handleVerifyOtp(donation._id)}
+                        className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                      >
+                        Verify
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleGenerateOtp(donation._id)}
+                      className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
+                    >
+                      Generate OTP
+                    </button>
+                  )}
+                </div>
+              )}
 
               <div className="flex items-center text-gray-500 gap-2 text-sm">
                 <CalendarDays className="w-4 h-4" />

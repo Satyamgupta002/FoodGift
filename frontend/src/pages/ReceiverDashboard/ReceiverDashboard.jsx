@@ -9,7 +9,8 @@ import {
   Clock,
   LogOut,
   User,
-  MapPin
+  MapPin,
+  Bell
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { calculateDistance, formatDistance } from "../../utils/distanceCalculator.js";
@@ -185,7 +186,7 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
   const handleAccept = async (requestId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.post(
+      const response = await axios.post(
         `/api/receiver/accept-request/${requestId}`,
         {},
         {
@@ -195,8 +196,16 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
         }
       );
 
-      setRequests((prev) => prev.filter((req) => req._id !== requestId));
-      setRequestCount((prev) => Math.max(0, prev - 1));
+      // Update the request in state to show as accepted instead of removing it
+      if (response.data.success && response.data.updatedRequest) {
+        setRequests((prev) =>
+          prev.map((req) =>
+            req._id === requestId
+              ? { ...req, status: "accepted", acceptedBy: response.data.updatedRequest.acceptedBy }
+              : req
+          )
+        );
+      }
     } catch (error) {
       console.error("Failed to accept request:", error);
     }
@@ -225,15 +234,20 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
   return (
     <div className="bg-white rounded-lg shadow-md">
       <div className="p-6">
-        <h3 className="text-xl font-semibold mb-2">Recent Donation Requests</h3>
-        <p className="text-gray-600 mb-4">Total Requests: {requests.length}</p>
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-end">
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Recent Donation Requests</h3>
+            <p className="text-gray-600">Total Requests: {requests.length}</p>
+          </div>
+        </div>
 
         {requests.length === 0 ? (
           <p className="text-gray-500">No requests available.</p>
         ) : (
           <div className="space-y-4">
             {requests.map((req, index) => {
-              if (req.status === 'pending') {
+              const isAcceptedByCurrentReceiver = req.status === 'accepted' && req.acceptedBy;
+              if (req.status === 'pending' || isAcceptedByCurrentReceiver) {
                 const donationTypeLabel = {
                   food: 'Food',
                   clothes: 'Clothes',
@@ -332,12 +346,18 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
                           </div>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleAccept(req._id)}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mt-2"
-                      >
-                        Accept
-                      </button>
+                      {req.status === 'accepted' ? (
+                        <span className="bg-green-100 text-green-700 px-4 py-2 rounded-lg mt-2 font-medium">
+                          Accepted by you
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleAccept(req._id)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 mt-2"
+                        >
+                          Accept
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -774,12 +794,77 @@ const PickupHistory = () => {
   );
 };
 
+// NotificationPanel Component
+const NotificationPanel = ({ isOpen, onClose, notifications }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md max-h-96 overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center p-6 border-b">
+          <h2 className="text-lg font-semibold text-gray-800">Notifications</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <div className="overflow-y-auto flex-1 p-6">
+          {notifications.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No notifications</p>
+          ) : (
+            <div className="space-y-3">
+              {notifications.map((notification) => (
+                <div
+                  key={notification._id}
+                  className="border-l-4 border-green-600 pl-4 py-3 bg-green-50 rounded hover:bg-green-100 transition-colors"
+                >
+                  <p className="text-sm font-medium text-gray-800">
+                    {notification.message}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {new Date(notification.createdAt).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Header Component with Notification Bell
+const Header = ({ notificationCount, onBellClick }) => {
+  return (
+    <div className="bg-white shadow-sm border-b">
+      <div className="flex justify-end items-center p-4 pr-8">
+        <button
+          onClick={onBellClick}
+          className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <Bell size={24} />
+          {notificationCount > 0 && (
+            <span className="absolute top-0 right-0 inline-flex items-center justify-center rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">
+              {notificationCount}
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 function ReceiverDashbaord() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [requests, setRequests] = useState([]);
   const [requestCount, setRequestCount] = useState(0);
   const [requestsLoading, setRequestsLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -802,7 +887,22 @@ function ReceiverDashbaord() {
       }
     };
 
+    const fetchNotifications = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await axios.get("/api/receiver/notifications", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setNotifications(response.data.notifications || []);
+      } catch (error) {
+        console.error("Error fetching receiver notifications:", error);
+      }
+    };
+
     fetchReceiverRequests();
+    fetchNotifications();
   }, []);
 
   const renderContent = () => {
@@ -838,10 +938,34 @@ function ReceiverDashbaord() {
         setActiveTab={setActiveTab}
         requestCount={requestCount}
       />
+      <Header
+        notificationCount={notifications.length}
+        onBellClick={() => setNotificationPanelOpen(true)}
+      />
+      <NotificationPanel
+        isOpen={notificationPanelOpen}
+        onClose={async () => {
+          setNotificationPanelOpen(false);
+          setNotifications([]);
+          
+          // Delete notifications from backend
+          try {
+            const token = localStorage.getItem("token");
+            await axios.delete("/api/receiver/notifications", {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+          } catch (error) {
+            console.error("Error clearing notifications:", error);
+          }
+        }}
+        notifications={notifications}
+      />
       <main
-        className={`min-h-screen transition-all duration-300 ${
+        className={`transition-all duration-300 ${
           sidebarOpen ? "ml-56" : "ml-20"
-        } p-8 bg-gray-100`}
+        } p-8 bg-gray-100 min-h-[calc(100vh-60px)]`}
       >
         <div className="max-w-7xl mx-auto">
           <h1 className="text-4xl font-bold mb-8 text-gray-800">

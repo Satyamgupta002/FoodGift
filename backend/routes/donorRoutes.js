@@ -6,6 +6,8 @@ import {
   getDonorRequests,
   getDonorProfile,
   cancelDonationRequest,
+  generatePickupOtp,
+  verifyPickupOtp,
 } from "../controllers/donorController.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 const donorRouter = express.Router();
@@ -27,6 +29,8 @@ donorRouter.post("/edit-profile", verifyToken, editDonorProfile);
 // Use multer middleware to accept a single file field named 'image'
 donorRouter.post("/donor-request", verifyToken, upload.single("image"), donorRequest);
 donorRouter.post("/cancel-request/:requestId", verifyToken, cancelDonationRequest);
+donorRouter.post("/generate-pickup-otp/:requestId", verifyToken, generatePickupOtp);
+donorRouter.post("/verify-pickup-otp/:requestId", verifyToken, verifyPickupOtp);
 donorRouter.get("/donor-requests", verifyToken, getDonorRequests);
 donorRouter.get("/donorProfile", verifyToken, getDonorProfile);
 

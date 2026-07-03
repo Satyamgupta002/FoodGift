@@ -65,6 +65,18 @@ const requestSchema = new mongoose.Schema({
     ref: "Receiver",
     default: null,
   },
+  acceptedAt: {
+    type: Date,
+    default: null,
+  },
+  pickupOtpHash: {
+    type: String,
+    default: null,
+  },
+  pickupOtpExpiresAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 // Index to optimize queries filtering by expiry status

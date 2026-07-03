@@ -9,6 +9,8 @@ import { fileURLToPath } from "url";
 import expiryQueue from "../queues/expiryQueue.js";
 import cloudinary from "../config/cloudinaryConfig.js";
 import Pickup from "../models/pickupModel.js";
+import Notification from "../models/notificationModel.js";
+import { generateOtp, hashOtp, compareOtp, isOtpExpired } from "../utils/otp.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -384,10 +386,9 @@ export const getDonorRequests = async (req, res) => {
     } catch (updateErr) {
       console.error("Error updating expired requests on read:", updateErr);
     }
-    const requests = await Request.find({ donor: id }).populate(
-      "donor",
-      "name phoneNumber email"
-    );
+    const requests = await Request.find({ donor: id })
+      .populate("donor", "name phoneNumber email")
+      .populate("acceptedBy", "organizationName name");
     // Sort by most recent first, showing both active and expired requests
     requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.status(200).json(requests);
@@ -396,6 +397,105 @@ export const getDonorRequests = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+export const generatePickupOtp = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const donorId = req.user.id;
+
+    const request = await Request.findOne({ _id: requestId, donor: donorId, status: "accepted" });
+    if (!request) {
+      return res.status(404).json({ message: "Accepted request not found" });
+    }
+
+    if (!request.acceptedBy) {
+      return res.status(400).json({ message: "Request has no accepted NGO yet" });
+    }
+
+    const otp = generateOtp();
+    const otpHash = await hashOtp(otp);
+    const expiryTime = new Date(Date.now() + 10 * 60 * 1000);
+
+    request.pickupOtpHash = otpHash;
+    request.pickupOtpExpiresAt = expiryTime;
+    await request.save();
+
+    await Notification.create({
+      recipient: request.acceptedBy,
+      type: "pickup_otp",
+      message: `Pickup OTP for donation request is ${otp}.`,
+      metadata: {
+        requestId: request._id,
+        donorId: donorId,
+        expiresAt: expiryTime,
+      },
+    });
+
+    res.status(200).json({
+      message: "OTP generated successfully",
+      expiresAt: expiryTime,
+    });
+  } catch (error) {
+    console.error("Error generating pickup OTP:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const verifyPickupOtp = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+    const { otp } = req.body;
+    const donorId = req.user.id;
+
+    const request = await Request.findOne({ _id: requestId, donor: donorId, status: "accepted" });
+    if (!request) {
+      return res.status(404).json({ message: "Accepted request not found" });
+    }
+
+    if (!request.pickupOtpHash || !request.pickupOtpExpiresAt) {
+      return res.status(400).json({ message: "No OTP has been generated for this request" });
+    }
+
+    if (isOtpExpired(request.pickupOtpExpiresAt)) {
+      request.pickupOtpHash = null;
+      request.pickupOtpExpiresAt = null;
+      await request.save();
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    if (!otp || typeof otp !== "string") {
+      return res.status(400).json({ message: "OTP is required" });
+    }
+
+    const isMatch = await compareOtp(otp, request.pickupOtpHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid OTP" });
+    }
+
+    request.status = "picked up";
+    request.pickupOtpHash = null;
+    request.pickupOtpExpiresAt = null;
+    await request.save();
+
+    // Create Pickup record when OTP is verified (actual pickup confirmed)
+    await Pickup.create({
+      receiver: request.acceptedBy,
+      donor: request.donor,
+      request: request._id,
+      foodType: request.foodType || null,
+      quantity: request.approxPeople || null,
+      status: "completed",
+    });
+
+    res.status(200).json({
+      message: "Pickup verified successfully",
+      request,
+    });
+  } catch (error) {
+    console.error("Error verifying pickup OTP:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 export const getDonorProfile = async (req, res) => {
   try {
     const { id } = req.user;

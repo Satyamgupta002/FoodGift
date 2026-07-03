@@ -2,6 +2,8 @@ import Request from "../models/requestModel.js";
 import Donor from "../models/donorModel.js";
 import Pickup from "../models/pickupModel.js";
 import Receiver from "../models/receiverModel.js";
+import Notification from "../models/notificationModel.js";
+import { isRequestVisibleToReceiver } from "../utils/requestStatus.js";
 
 export const getTotalRequests = async (req, res) => {
   try {
@@ -32,33 +34,33 @@ export const getTotalDonors = async (req, res) => {
 
 export const getAllRequests = async (req, res) => {
   try {
-    const receiverId = req.user.id; // assuming req.user is set via auth middleware
-    // console.log(receiverId);
-    // Calculate 1 hour before now to filter out requests expiring soon
+    const receiverId = req.user.id;
     const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
-    // Find receiver and populate their request documents
-    const receiver = await Receiver.findById(receiverId).populate({
-      path: "requests",
-      match: { 
-        status: "pending",
-        expiryTime: { $gt: oneHourFromNow } // Only show requests expiring more than 1 hour away
-      },
-      populate: {
-        path: "donor",
-          select: "name phoneNumber",
-      },
-    });
+
+    const receiver = await Receiver.findById(receiverId);
 
     if (!receiver) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Receiver not found" });
+      return res.status(404).json({ success: false, message: "Receiver not found" });
     }
-    console.log(receiver.requests)
+
+    const requests = await Request.find({
+      _id: { $in: receiver.requests || [] },
+      expiryTime: { $gt: oneHourFromNow },
+      $or: [
+        { status: "pending" },
+        { status: "accepted", acceptedBy: receiverId },
+      ],
+    }).populate({
+      path: "donor",
+      select: "name phoneNumber",
+    });
+
+    const visibleRequests = requests.filter((request) => isRequestVisibleToReceiver(request, receiverId));
+
     res.status(200).json({
       success: true,
       message: "Requests fetched successfully",
-      data: receiver.requests,
+      data: visibleRequests,
     });
   } catch (error) {
     console.error("Error fetching requests:", error);
@@ -75,64 +77,59 @@ export const acceptRequest = async (req, res) => {
     const { requestId } = req.params;
     const receiverId = req.user.id;
 
-    // 1. Find the receiver and populate their requests with donor info
-    const receiver = await Receiver.findById(receiverId).populate({
-      path: "requests",
-      populate: {
-        path: "donor",
-        model: "Donor",
-      },
-    });
-
+    const receiver = await Receiver.findById(receiverId);
     if (!receiver) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Receiver not found" });
+      return res.status(404).json({ success: false, message: "Receiver not found" });
     }
 
-    // 2. Find the request in receiver's list
-    const request = receiver.requests.find(
-      (req) => req._id.toString() === requestId
-    );
-    if (!request) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: "Request not found in receiver's list",
-        });
-    }
-
-    console.log(req.user)
-    // 3. Update request status to "picked up"
-    const updatedRequest = await Request.findByIdAndUpdate(
-      requestId,
-      { status: "picked up",acceptedBy:req.user.id },
+    const updatedRequest = await Request.findOneAndUpdate(
+      {
+        _id: requestId,
+        status: "pending",
+        acceptedBy: null,
+      },
+      {
+        $set: {
+          status: "accepted",
+          acceptedBy: receiverId,
+          acceptedAt: new Date(),
+        },
+      },
       { new: true }
+    ).populate("donor", "name phoneNumber");
+
+    if (!updatedRequest) {
+      const existingRequest = await Request.findById(requestId);
+      if (!existingRequest) {
+        return res.status(404).json({ success: false, message: "Request not found" });
+      }
+
+      return res.status(409).json({
+        success: false,
+        message: existingRequest.status === "accepted"
+          ? "This request has already been accepted"
+          : "This request can no longer be accepted",
+      });
+    }
+
+    await Receiver.updateMany(
+      {
+        _id: { $ne: receiverId },
+        requests: requestId,
+      },
+      {
+        $pull: { requests: requestId },
+      }
     );
 
-    // 4. Create and save pickup
-    const newPickup = new Pickup({
-      receiver: receiverId,
-      donor: request.donor._id,
-      request: request._id,
-      foodType: request.foodType,
-      quantity: request.quantity,
-      status: "completed",
-    });
-
-    await newPickup.save();
-
-    // 5. (Optional) Remove from receiver's pending requests
-    receiver.requests = receiver.requests.filter(
-      (req) => req._id.toString() !== requestId
-    );
-    await receiver.save();
+    if (!receiver.requests.includes(requestId)) {
+      receiver.requests.push(requestId);
+      await receiver.save();
+    }
 
     res.status(201).json({
       success: true,
-      message: "Request accepted, marked as picked up, and pickup recorded",
-      pickup: newPickup,
+      message: "Request accepted successfully",
       updatedRequest,
     });
   } catch (error) {
@@ -217,5 +214,33 @@ export const editReceiverProfile = async (req, res) => {
       message: "Failed to update profile",
       error: error.message,
     });
+  }
+};
+
+export const getReceiverNotifications = async (req, res) => {
+  try {
+    const receiverId = req.user.id;
+    const notifications = await Notification.find({ recipient: receiverId })
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    res.status(200).json({ success: true, notifications });
+  } catch (error) {
+    console.error("Error fetching receiver notifications:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch notifications", error: error.message });
+  }
+};
+
+export const clearReceiverNotifications = async (req, res) => {
+  try {
+    const receiverId = req.user.id;
+    
+    // Delete all notifications for this receiver
+    await Notification.deleteMany({ recipient: receiverId });
+
+    res.status(200).json({ success: true, message: "All notifications cleared" });
+  } catch (error) {
+    console.error("Error clearing receiver notifications:", error);
+    res.status(500).json({ success: false, message: "Failed to clear notifications", error: error.message });
   }
 };

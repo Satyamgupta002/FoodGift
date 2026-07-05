@@ -211,3 +211,15 @@ npm run dev
 
 - **Message Delivery Status:** Introduce single-tick and double-tick indicators to show whether chat messages have been delivered and received.
 ---
+## Author
+
+**Satyam Gupta**
+
+B.Tech, Electronics & Communication Engineering<br>
+MANIT Bhopal
+
+---
+
+## Show Your Support
+
+If you like this project, consider giving it a ⭐ on GitHub!

@@ -10,6 +10,7 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 import mongoose from "mongoose";
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import authRouter from "./routes/authRoutes.js";
 import donorRouter from "./routes/donorRoutes.js";
@@ -30,6 +31,8 @@ app.use(cors({
   credentials: true
 }));
 
+
+app.use(cookieParser());
 
 // Allow larger payloads for base64-encoded images sent in JSON (adjust as needed)
 app.use(express.json({ limit: '20mb' }));

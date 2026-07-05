@@ -58,15 +58,6 @@ const DonorPage = () => {
     setStatusType("");
 
     try {
-      const token = localStorage.getItem("token");
-      
-      if (!token) {
-        setStatusType("error");
-        setStatusMessage("Please login first before submitting a donation.");
-        setLoading(false);
-        return;
-      }
-
       const formData = new FormData();
 
       if (donationType === "food") {
@@ -107,12 +98,7 @@ const DonorPage = () => {
 
       const res = await axios.post(
         "/api/donor/donor-request",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        formData
       );
 
       console.log("Success:", res.data);

@@ -24,7 +24,6 @@ function DonorLogin() {
       );
 
       console.log("Login successful:", response.data);
-      localStorage.setItem("token", response.data.token);
       navigate("/donorDashboard");
     } catch (error) {
       const responseMessage =

@@ -5,6 +5,8 @@ import DonorPage from './DonorPage';
 import PastActivities from './PastActivities';
 import Profile from './Profile';
 import { useNavigate } from 'react-router-dom';
+import axios from '../../config/axiosConfig.js';
+
 function AllShow() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('donate');
@@ -17,10 +19,15 @@ function AllShow() {
     { id: 'profile', label: 'Profile', icon: UserCog },
   ];
 
-  const handleLogout = () => {
-    if(localStorage.getItem('token')) localStorage.removeItem('token');
-    navigate('/');
-    console.log('User logged out');
+  const handleLogout = async () => {
+    try {
+      await axios.post('/api/auth/logout');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      navigate('/');
+      console.log('User logged out');
+    }
   };
 
   const renderContent = () => {

@@ -131,8 +131,26 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign({ id: user._id, role }, ACCESS_TOKEN_SECRET, {
       expiresIn: "7d",
     });
-    res.status(200).json({ user, token });
+
+    res.cookie("accessToken", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+});
+
+    res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({ message: "Login failed", error: error.message });
   }
+};
+
+export const logoutUser = (req, res) => {
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 };

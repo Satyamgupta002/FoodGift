@@ -17,16 +17,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
-
-        const response = await axios.get(
-          "/api/donor/donorProfile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get("/api/donor/donorProfile");
         console.log(response);
         const donor = response.data.donor;
         setProfile({
@@ -53,21 +44,12 @@ const Profile = () => {
     e.preventDefault();
     setIsEditing(false);
     try {
-      const token = localStorage.getItem("token");
       const updateData = {
         name: profile.name,
         phoneNumber: profile.phone,
         password: profile.password,
       };
-      const response = await axios.post(
-        "/api/donor/edit-profile",
-        updateData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post("/api/donor/edit-profile", updateData);
 
       console.log("Profile updated successfully:", response.data);
     } catch (error) {

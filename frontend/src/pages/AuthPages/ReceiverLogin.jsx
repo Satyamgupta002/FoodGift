@@ -22,7 +22,6 @@ function ReceiverLogin() {
         }
       );
       console.log("Login successful:", response.data);
-      localStorage.setItem("token", response.data.token);
       navigate("/receiverDashboard");
     } catch (error) {
       const responseMessage =

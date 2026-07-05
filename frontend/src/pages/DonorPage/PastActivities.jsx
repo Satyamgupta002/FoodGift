@@ -14,15 +14,7 @@ export default function PastActivities() {
   useEffect(() => {
     const fetchDonorRequests = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get(
-          "/api/donor/donor-requests",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const res = await axios.get("/api/donor/donor-requests");
 
         setDonations(res.data);
       } catch (error) {
@@ -44,16 +36,7 @@ export default function PastActivities() {
     if (!pendingCancelId) return;
 
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `/api/donor/cancel-request/${pendingCancelId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await axios.post(`/api/donor/cancel-request/${pendingCancelId}`, {});
 
       setDonations((prev) =>
         prev.map((donation) =>
@@ -70,10 +53,7 @@ export default function PastActivities() {
 
   const handleGenerateOtp = async (requestId) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(`/api/donor/generate-pickup-otp/${requestId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post(`/api/donor/generate-pickup-otp/${requestId}`, {});
       setOtpState((prev) => ({ ...prev, [requestId]: { stage: "input" } }));
       setErrorMessage("");
     } catch (error) {
@@ -83,11 +63,8 @@ export default function PastActivities() {
 
   const handleVerifyOtp = async (requestId) => {
     try {
-      const token = localStorage.getItem("token");
       const otp = otpState[requestId]?.value || "";
-      const response = await axios.post(`/api/donor/verify-pickup-otp/${requestId}`, { otp }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.post(`/api/donor/verify-pickup-otp/${requestId}`, { otp });
       setDonations((prev) => prev.map((donation) => donation._id === requestId ? { ...donation, status: response.data.request.status } : donation));
       setOtpState((prev) => ({ ...prev, [requestId]: { stage: "verified" } }));
       setErrorMessage("");

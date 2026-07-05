@@ -18,10 +18,14 @@ import { calculateDistance, formatDistance } from "../../utils/distanceCalculato
 const Sidebar = ({ isOpen, toggleSidebar, activeTab, setActiveTab, requestCount }) => {
   const navigate = useNavigate(); 
 
-  const handleLogout = () => {
-    if (localStorage.getItem("token")) localStorage.removeItem("token");
-    navigate("/"); 
-    //console.log("User logged out");
+  const handleLogout = async () => {
+    try {
+      await axios.post("/api/auth/logout");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      navigate("/");
+    }
   };
 
   const menuItems = [
@@ -113,29 +117,10 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token"); // Assuming token is stored here
-        const reqRes = await axios.get(
-          "/api/receiver/total-requests",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const donorRes = await axios.get(
-          "/api/receiver/total-donors",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const reqRes = await axios.get("/api/receiver/total-requests");
+        const donorRes = await axios.get("/api/receiver/total-donors");
 
-        // const profileRes = await axios.get('/api/receiver/profile', {
-        //   headers: {
-        //     Authorization: `Bearer ${token}`
-        //   }
-        // });
+        // const profileRes = await axios.get('/api/receiver/profile');
 
         setTotalRequests(reqRes.data.totalRequests);
         setTotalDonors(donorRes.data.totalDonors);
@@ -167,12 +152,7 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
   useEffect(() => {
     const fetchReceiverLocation = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("/api/receiver/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get("/api/receiver/profile");
 
         setReceiverLocation(response.data.receiver?.location || null);
       } catch (error) {
@@ -185,16 +165,7 @@ const Requests = ({ requests, setRequests, setRequestCount, loading }) => {
 
   const handleAccept = async (requestId) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `/api/receiver/accept-request/${requestId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(`/api/receiver/accept-request/${requestId}`, {});
 
       // Update the request in state to show as accepted instead of removing it
       if (response.data.success && response.data.updatedRequest) {
@@ -529,12 +500,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("/api/receiver/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get("/api/receiver/profile");
         setProfile(response.data.receiver);
         setLoading(false);
       } catch (error) {
@@ -611,16 +577,7 @@ const EditProfileForm = ({ profile, setProfile, setIsEditing }) => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        "/api/receiver/edit-profile",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.put("/api/receiver/edit-profile", formData);
       setProfile(response.data.receiver);
       setIsEditing(false);
     } catch (error) {
@@ -702,15 +659,7 @@ const PickupHistory = () => {
   useEffect(() => {
     const fetchPickupHistory = async () => {
       try {
-        const token = localStorage.getItem("token"); // Assuming token is stored here
-        const response = await axios.get(
-          "/api/receiver/pickup-history",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get("/api/receiver/pickup-history");
 
         setPickups(response.data.pickups);
         setLoading(false);
@@ -871,12 +820,7 @@ function ReceiverDashbaord() {
   useEffect(() => {
     const fetchReceiverRequests = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("/api/receiver/requests", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await axios.get("/api/receiver/requests");
         const pendingRequests = res.data.data || [];
         setRequests(pendingRequests);
         setRequestCount(pendingRequests.length);
@@ -889,12 +833,7 @@ function ReceiverDashbaord() {
 
     const fetchNotifications = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("/api/receiver/notifications", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get("/api/receiver/notifications");
         setNotifications(response.data.notifications || []);
       } catch (error) {
         console.error("Error fetching receiver notifications:", error);
@@ -950,12 +889,7 @@ function ReceiverDashbaord() {
           
           // Delete notifications from backend
           try {
-            const token = localStorage.getItem("token");
-            await axios.delete("/api/receiver/notifications", {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
+            await axios.delete("/api/receiver/notifications");
           } catch (error) {
             console.error("Error clearing notifications:", error);
           }

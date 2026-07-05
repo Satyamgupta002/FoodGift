@@ -46,89 +46,89 @@ NGOs get the generated OTP directly within the application through a notificatio
 The following workflow illustrates how a donation moves through the FoodGift platform from creation to successful pickup.
 
 ```text
-                         ┌─────────────────────────────┐
-                         │       Donor Registers       │
-                         └──────────────┬──────────────┘
-                                        │
-                                        ▼
-                         ┌─────────────────────────────┐
-                         │      Login to System        │
-                         └──────────────┬──────────────┘
-                                        │
-                                        ▼
-                         ┌─────────────────────────────┐
-                         │   Create Donation Request   │
-                         └──────────────┬──────────────┘
-                                        │
-                                        ▼
-                    ┌─────────────────────────────────────────┐
-                    │   Upload Donation Image to Cloudinary   │
-                    └─────────────────┬───────────────────────┘
-                                      │
-                                      ▼
-                    ┌─────────────────────────────────────────┐
-                    │ Convert Address → Latitude & Longitude  │
-                    │      using OpenCage Geocoding API       │
-                    └─────────────────┬───────────────────────┘
-                                      │
-                                      ▼
-                    ┌─────────────────────────────────────────┐
-                    │   Find NGOs within Configured Radius    │
-                    └─────────────────┬───────────────────────┘
-                                      │
-                                      ▼
-                    ┌─────────────────────────────────────────┐
-                    │   Nearby NGOs Receive Donation Request  │
-                    └─────────────────┬───────────────────────┘
-                                      │
-                                      ▼
-                    ┌─────────────────────────────────────────┐
-                    │      NGO Accepts Donation Request       │
-                    └─────────────────┬───────────────────────┘
-                                      │
-                                      ▼
-          ┌─────────────────────────────────────────────────────────────┐
-          │ Request Status → Accepted                                   │
-          │                                                             │
-          │ • Donor sees "Accepted"                                     │
-          │ • Request removed from all other NGOs                       │
-          │ • Accepted request remains visible only to selected NGO     │
-          └─────────────────┬───────────────────────────────────────────┘
-                            │
-                            ▼
-             ┌─────────────────────────────────────┐
-             │      Donor Generates Pickup OTP     │
-             └─────────────────┬───────────────────┘
-                               │
-                               ▼
-             ┌─────────────────────────────────────┐
-             │    NGO Receives OTP Notification    │
-             └─────────────────┬───────────────────┘
-                               │
-                               ▼
-             ┌─────────────────────────────────────┐
-             │     NGO Arrives at Pickup Location  │
-             └─────────────────┬───────────────────┘
-                               │
-                               ▼
-             ┌─────────────────────────────────────┐
-             │    Donor Shares OTP with NGO        │
-             └─────────────────┬───────────────────┘
-                               │
-                               ▼
-             ┌─────────────────────────────────────┐
-             │ OTP Verification (Valid for 10 min) │
-             └─────────────────┬───────────────────┘
-                               │
-                     ┌─────────┴─────────┐
-                     │                   │
-              OTP Verified        OTP Expired
-                     │                   │
-                     ▼                   ▼
-      Donation Marked Picked Up    Generate New OTP
-                     │
-                     ▼
-          Donation Successfully Completed
+                     ┌─────────────────────────────┐
+                     │       Donor Registers       │
+                     └──────────────┬──────────────┘
+                                    │
+                                    ▼
+                     ┌─────────────────────────────┐
+                     │      Login to System        │
+                     └──────────────┬──────────────┘
+                                    │
+                                    ▼
+                     ┌─────────────────────────────┐
+                     │   Create Donation Request   │
+                     └──────────────┬──────────────┘
+                                    │
+                                    ▼
+                ┌─────────────────────────────────────────┐
+                │   Upload Donation Image to Cloudinary   │
+                └─────────────────┬───────────────────────┘
+                                  │
+                                  ▼
+                ┌─────────────────────────────────────────┐
+                │ Convert Address → Latitude & Longitude  │
+                │      using OpenCage Geocoding API       │
+                └─────────────────┬───────────────────────┘
+                                  │
+                                  ▼
+                ┌─────────────────────────────────────────┐
+                │   Find NGOs within Configured Radius    │
+                └─────────────────┬───────────────────────┘
+                                  │
+                                  ▼
+                ┌─────────────────────────────────────────┐
+                │   Nearby NGOs Receive Donation Request  │
+                └─────────────────┬───────────────────────┘
+                                  │
+                                  ▼
+                ┌─────────────────────────────────────────┐
+                │      NGO Accepts Donation Request       │
+                └─────────────────┬───────────────────────┘
+                                  │
+                                  ▼
+      ┌─────────────────────────────────────────────────────────────┐
+      │ Request Status → Accepted                                   │
+      │                                                             │
+      │ • Donor sees "Accepted"                                     │
+      │ • Request removed from all other NGOs                       │
+      │ • Accepted request remains visible only to selected NGO     │
+      └─────────────────┬───────────────────────────────────────────┘
+                        │
+                        ▼
+         ┌─────────────────────────────────────┐
+         │      Donor Generates Pickup OTP     │
+         └─────────────────┬───────────────────┘
+                           │
+                           ▼
+         ┌─────────────────────────────────────┐
+         │    NGO Receives OTP Notification    │
+         └─────────────────┬───────────────────┘
+                           │
+                           ▼
+         ┌─────────────────────────────────────┐
+         │     NGO Arrives at Pickup Location  │
+         └─────────────────┬───────────────────┘
+                           │
+                           ▼
+         ┌─────────────────────────────────────┐
+         │    Donor Shares OTP with NGO        │
+         └─────────────────┬───────────────────┘
+                           │
+                           ▼
+         ┌─────────────────────────────────────┐
+         │ OTP Verification (Valid for 10 min) │
+         └─────────────────┬───────────────────┘
+                           │
+                 ┌─────────┴─────────┐
+                 │                   │
+          OTP Verified        OTP Expired
+                 │                   │
+                 ▼                   ▼
+  Donation Marked Picked Up    Generate New OTP
+                 │
+                 ▼
+      Donation Successfully Completed
 ```
 
 ---
@@ -202,6 +202,9 @@ cd FoodGift
 cd backend
 npm run dev
 ```
+---
+## Live Link
+#### https://api-foodgift.onrender.com
 ---
 ## Planned Enhancements
 

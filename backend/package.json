@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "dev:backend": "nodemon backend/index.js",
-    "worker": "node backend/jobs/expiryWorker.js",
-    "dev:frontend": "npm run dev --prefix frontend",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend",
-    "start": "node backend/index.js"
-  },
+  "dev:backend": "nodemon index.js",
+  "worker": "node jobs/expiryWorker.js",
+  "dev:frontend": "npm run dev --prefix ../frontend",
+  "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+  "build": "npm install && npm install --prefix ../frontend && npm run build --prefix ../frontend",
+  "start": "node index.js"
+},
   "type": "module",
   "keywords": [],
   "author": "",

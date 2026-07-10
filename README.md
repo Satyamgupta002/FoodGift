@@ -4,11 +4,11 @@
 
 ## About the Project
 
-FoodGift is a location-aware donation platform that simplifies the process of donating surplus food, clothes, books and toys etc. to NGOs. Instead of requiring donors to manually search for organizations or make multiple phone calls, the platform automatically identifies NGOs operating within a configurable radius of the donor's location and makes the donation request available only to those organizations.
+FoodGift is a location-aware donation platform that enables users to donate food, clothes, books, toys, and other essentials to nearby NGOs. Using geolocation, it automatically identifies NGOs within the donor's configured service radius, eliminating the need for manual coordination and ensuring faster, more efficient resource distribution.
 
 - Manages the complete donation lifecycle—from donor registration and donation creation to NGO acceptance, OTP-based pickup verification, and successful donation completion.
 
-- Every donation request has a configurable expiry time. If a donation is not accepted, picked up, or cancelled before the expiry time, a delayed background job automatically marks it as expired using **BullMQ** and **Redis**, eliminating the need for manual cleanup or scheduled cron jobs.
+- Every donation request has a configurable expiry time. Using BullMQ and Redis, FoodGift schedules delayed background expiry jobs to automatically expire unaccepted, unpicked, or cancelled donations, eliminating the need for cron jobs.
 
 - Uses **location-based NGO matching** by converting donor addresses into geographical coordinates and notifying only NGOs operating within the configured service radius.
 
@@ -26,15 +26,15 @@ FoodGift is a location-aware donation platform that simplifies the process of do
 
 ### 📍 Smart Location-Based NGO Matching
 
-Instead of displaying every donation request to every NGO, FoodGift uses geographical coordinates to identify NGOs operating within the donor's selected radius. This ensures that only organizations capable of collecting the donation receive the request, reducing unnecessary notifications and improving pickup efficiency.
+Instead of displaying every donation request to every NGO, FoodGift uses geographical coordinates to identify NGOs within the donor's configured service radius, ensuring only eligible organizations receive requests and improving pickup efficiency.
 
 ### ⏳ Automated Donation Expiry Using Background Jobs
 
-Every donation request has a predefined expiry time. Rather than periodically scanning the database using cron jobs, FoodGift schedules delayed background jobs using **BullMQ** and **Redis**. Once the expiry time is reached, the donation is automatically marked as expired, making the system more scalable and efficient.
+Every donation request has a predefined expiry time. Instead of periodically scanning the database with cron jobs, FoodGift uses **BullMQ** and **Redis** to schedule delayed background jobs that automatically expire donations, making the system more scalable and efficient.
 
 ### 🔐 OTP-Based Pickup Verification
 
-To ensure that donations are handed over only to the NGO that accepted the request, FoodGift introduces an OTP-based verification mechanism. After an NGO accepts a donation, the donor can generate a time-limited OTP, which is verified before marking the donation as successfully picked up. This prevents accidental or unauthorized completion of requests.
+After an NGO accepts a donation, the donor generates a time-limited OTP that must be verified before marking the donation as picked up, ensuring secure handovers and preventing unauthorized completion.
 
 ### 🔔 In-App Notification System
 

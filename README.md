@@ -1,8 +1,8 @@
-## FoodGift
-### Smart Donation Management Platform for Resource Redistribution
+### FoodGift
+#### Smart Donation Management Platform for Resource Redistribution
 ---
 
-## About the Project
+### About the Project
 
 FoodGift is a location-aware donation platform that enables users to donate food, clothes, books, toys, and other essentials to nearby NGOs. Using geolocation, it automatically identifies NGOs within the donor's configured service radius, eliminating the need for manual coordination and ensuring faster, more efficient resource distribution.
 
@@ -22,26 +22,26 @@ FoodGift is a location-aware donation platform that enables users to donate food
 
 ---
 
-## Why FoodGift Stands Out
+### Why FoodGift Stands Out
 
-### 📍 Smart Location-Based NGO Matching
+#### 📍 Smart Location-Based NGO Matching
 
 Instead of displaying every donation request to every NGO, FoodGift uses geographical coordinates to identify NGOs within the donor's configured service radius, ensuring only eligible organizations receive requests and improving pickup efficiency.
 
-### ⏳ Automated Donation Expiry Using Background Jobs
+#### ⏳ Automated Donation Expiry Using Background Jobs
 
 Every donation request has a predefined expiry time. Instead of periodically scanning the database with cron jobs, FoodGift uses **BullMQ** and **Redis** to schedule delayed background jobs that automatically expire donations, making the system more scalable and efficient.
 
-### 🔐 OTP-Based Pickup Verification
+#### 🔐 OTP-Based Pickup Verification
 
 After an NGO accepts a donation, the donor generates a time-limited OTP that must be verified before marking the donation as picked up, ensuring secure handovers and preventing unauthorized completion.
 
-### 🔔 In-App Notification System
+#### 🔔 In-App Notification System
 
 NGOs get the generated OTP directly within the application through a notification system. 
 
 ---
-## End-to-End System Workflow
+### End-to-End System Workflow
 
 The following workflow illustrates how a donation moves through the FoodGift platform from creation to successful pickup.
 
@@ -132,9 +132,9 @@ The following workflow illustrates how a donation moves through the FoodGift pla
 ```
 
 ---
-## Tech Stack
+### Tech Stack
 
-### Frontend
+#### Frontend
 
 | Technology | Purpose |
 |------------|---------|
@@ -144,7 +144,7 @@ The following workflow illustrates how a donation moves through the FoodGift pla
 | **React Router** | Client-side routing |
 | **Axios** | HTTP communication with backend |
 
-### Backend
+#### Backend
 
 | Technology | Purpose |
 |------------|---------|
@@ -160,7 +160,7 @@ The following workflow illustrates how a donation moves through the FoodGift pla
 | **Cloudinary** | Cloud image storage |
 | **OpenCage API** | Address geocoding |
 
-### Development & Deployment
+#### Development & Deployment
 
 | Technology | Purpose |
 |------------|---------|
@@ -173,17 +173,17 @@ The following workflow illustrates how a donation moves through the FoodGift pla
 
 ---
 
-## Getting Started
+### Getting Started
 
 Follow these steps to run the project locally.
 
-### Clone the Repository
+#### Clone the Repository
 
 ```bash
 git clone https://github.com/Satyamgupta002/FoodGift.git
 cd FoodGift
 ```
-### Install Dependencies
+#### Install Dependencies
 
 ```bash
 cd backend
@@ -192,21 +192,21 @@ cd ..
 cd frontend
 npm install
 ```
-### Environment Variables Setup
+#### Environment Variables Setup
 
 Create a `.env` file inside the `backend` directory and fill in environment variables mentioned in .env.example file.
 
-### Start the application
+#### Start the application
 ```bash
 cd FoodGift
 cd backend
 npm run dev
 ```
 ---
-## Live Link
-#### https://api-foodgift.onrender.com
+### Live Link
+##### https://api-foodgift.onrender.com
 ---
-## Planned Enhancements
+### Planned Enhancements
 
 - **ML-Based Urgency:** Train a model on real world donation data to predict the urgency of a particular donation so that we can prioritize the request.
   
@@ -216,7 +216,7 @@ npm run dev
 
 - **Message Delivery Status:** Introduce single-tick and double-tick indicators to show whether chat messages have been delivered and received.
 ---
-## Author
+### Author
 
 **Satyam Gupta**
 
@@ -225,6 +225,6 @@ MANIT Bhopal
 
 ---
 
-## Show Your Support
+### Show Your Support
 
 If you like this project, consider giving it a ⭐ on GitHub!

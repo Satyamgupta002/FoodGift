@@ -208,6 +208,8 @@ npm run dev
 ---
 ## Planned Enhancements
 
+- **ML-Based Urgency:** Train a model on real world donation data to predict the urgency of a particular donation so that we can prioritize the request.
+  
 - **Real-Time Chat:** Enable one-to-one communication between donors and NGOs after a donation request is accepted to simplify coordination during pickup.
 
 - **Socket.IO Based Real-Time Updates:** Implement WebSockets to instantly synchronize donation requests, notifications, and status updates.

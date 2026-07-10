@@ -6,7 +6,7 @@
 
 FoodGift is a location-aware donation platform that enables users to donate food, clothes, books, toys, and other essentials to nearby NGOs. Using geolocation, it automatically identifies NGOs within the donor's configured service radius, eliminating the need for manual coordination and ensuring faster, more efficient resource distribution.
 
-- Manages the complete donation lifecycle—from donor registration and donation creation to NGO acceptance, OTP-based pickup verification, and successful donation completion.
+- Manages the complete donation lifecycle, from donor registration and donation creation to NGO acceptance, OTP-based pickup verification, and successful donation completion.
 
 - Every donation request has a configurable expiry time. Using BullMQ and Redis, FoodGift schedules delayed background expiry jobs to automatically expire unaccepted, unpicked, or cancelled donations, eliminating the need for cron jobs.
 

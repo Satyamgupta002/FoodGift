@@ -213,8 +213,6 @@ npm run dev
 - **Real-Time Chat:** Enable one-to-one communication between donors and NGOs after a donation request is accepted to simplify coordination during pickup.
 
 - **Socket.IO Based Real-Time Updates:** Implement WebSockets to instantly synchronize donation requests, notifications, and status updates.
-
-- **Message Delivery Status:** Introduce single-tick and double-tick indicators to show whether chat messages have been delivered and received.
 ---
 ### Author
 
